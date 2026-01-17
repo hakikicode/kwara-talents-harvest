@@ -1,8 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Kwara Talent Harvest — Admin</title>
+  <title>Admin Dashboard</title>
   <link rel="stylesheet" href="styles/admin.css">
 </head>
 <body>
@@ -11,28 +10,28 @@
 
   <!-- LOGIN -->
   <div id="loginBox" class="glass">
-    <img src="assets/logo.png" style="height:42px">
     <h2>Admin Login</h2>
-
     <input id="username" placeholder="Username">
     <input id="password" type="password" placeholder="Password">
-
     <button onclick="login()">Login</button>
-    <p id="status"></p>
   </div>
 
   <!-- DASHBOARD -->
   <div id="dashboard" class="glass" style="display:none">
     <div class="topbar">
-      <h3>Pending Contestants</h3>
-      <button class="logout" onclick="logout()">Logout</button>
+      <h2>Admin Dashboard</h2>
+      <button onclick="logout()">Logout</button>
     </div>
 
-    <div id="list"></div>
+    <h3>⏳ Pending Contestants</h3>
+    <div id="pendingList"></div>
+
+    <h3>✅ Approved Contestants</h3>
+    <div id="approvedList"></div>
   </div>
 
 </div>
 
-<script src="scripts/admin.js"></script>
+<script type="module" src="scripts/admin.js"></script>
 </body>
 </html>

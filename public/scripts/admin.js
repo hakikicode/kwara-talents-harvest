@@ -1,52 +1,54 @@
-const token = localStorage.getItem("adminToken");
+import { db } from "../firebase/setup.js";
+import {
+  ref,
+  get,
+  update
+} from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 
-const loginBox = document.getElementById("loginBox");
-const dashboard = document.getElementById("dashboard");
-const list = document.getElementById("list");
-const statusText = document.getElementById("status");
+/* ===== AUTH ===== */
 
-async function login() {
-  statusText.textContent = "Signing in...";
+function login() {
+  const u = username.value;
+  const p = password.value;
 
-  const res = await fetch("/api/admin-login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      username: username.value,
-      password: password.value
-    })
-  });
-
-  const data = await res.json();
-
-  if (data.token) {
-    localStorage.setItem("adminToken", data.token);
-    location.reload();
+  if (u === "admin" && p === "pass") {
+    localStorage.setItem("adminAuth", "true");
+    loadDashboard();
   } else {
-    statusText.textContent = "❌ Invalid login";
+    alert("Invalid login");
   }
 }
 
-async function loadContestants() {
+function logout() {
+  localStorage.removeItem("adminAuth");
+  location.reload();
+}
+
+/* ===== UI ===== */
+
+const loginBox = document.getElementById("loginBox");
+const dashboard = document.getElementById("dashboard");
+const pendingList = document.getElementById("pendingList");
+const approvedList = document.getElementById("approvedList");
+
+function loadDashboard() {
   loginBox.style.display = "none";
   dashboard.style.display = "block";
-  statusText.textContent = "Loading contestants...";
+  loadContestants();
+}
 
-  const res = await fetch("/api/contestants", {
-    headers: { Authorization: `Bearer ${token}` }
-  });
+/* ===== FETCH DATA ===== */
 
-  const data = await res.json();
-  list.innerHTML = "";
+async function loadContestants() {
+  pendingList.innerHTML = "";
+  approvedList.innerHTML = "";
 
-  const pending = data.filter(c => c.status === "pending");
+  const snap = await get(ref(db, "contestants"));
+  if (!snap.exists()) return;
 
-  if (!pending.length) {
-    list.innerHTML = "<p>No pending contestants</p>";
-    return;
-  }
+  const data = snap.val();
 
-  pending.forEach(c => {
+  Object.entries(data).forEach(([id, c]) => {
     const card = document.createElement("div");
     card.className = "card";
 
@@ -54,31 +56,34 @@ async function loadContestants() {
       <h4>${c.stage_name || "No Stage Name"}</h4>
       <p><b>Name:</b> ${c.full_name}</p>
       <p><b>Talent:</b> ${c.talents?.join(", ")}</p>
-      <button onclick="approve('${c.id}')">Approve</button>
     `;
 
-    list.appendChild(card);
-  });
+    if (c.status === "pending") {
+      const btn = document.createElement("button");
+      btn.textContent = "Approve";
+      btn.onclick = () => approve(id);
+      card.appendChild(btn);
+      pendingList.appendChild(card);
+    }
 
-  statusText.textContent = "";
+    if (c.status === "approved") {
+      approvedList.appendChild(card);
+    }
+  });
 }
 
+/* ===== APPROVE ===== */
+
 async function approve(id) {
-  await fetch("/api/approve", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`
-    },
-    body: JSON.stringify({ id })
+  await update(ref(db, "contestants/" + id), {
+    status: "approved"
   });
 
   loadContestants();
 }
 
-function logout() {
-  localStorage.removeItem("adminToken");
-  location.reload();
-}
+/* ===== INIT ===== */
 
-if (token) loadContestants();
+if (localStorage.getItem("adminAuth")) {
+  loadDashboard();
+}
