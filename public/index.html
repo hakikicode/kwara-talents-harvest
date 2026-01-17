@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kwara Talent Harvest 6.0</title>
+
+  <!-- FAVICON -->
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="styles/theme.css">
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/mobile.css">
+</head>
+
+<body>
+
+<!-- FLASH POPUP -->
+<div id="flashPopup" class="flash-popup">
+  <div class="flash-card">
+
+    <button class="flash-close" onclick="closeFlash()">×</button>
+
+    <span class="flash-badge">SEASON 6.0</span>
+
+    <h2>Registration Is Now Open 🎉</h2>
+
+    <p class="flash-text">
+      Join Kwara Talent Harvest 6.0 and take your first step
+      toward stardom.
+    </p>
+
+    <ul class="flash-steps">
+      <li>📝 Fill the registration form</li>
+      <li>💬 Join contestants WhatsApp group</li>
+      <li>🎤 Await audition invitation</li>
+    </ul>
+
+    <div class="flash-actions">
+      <a href="register.html" class="btn primary large">
+        Register Now
+      </a>
+
+      <a href="https://chat.whatsapp.com/F9ZeBVQxdTW00sNc9sPQDw"
+         target="_blank"
+         class="btn whatsapp outline">
+        Join Public Community
+      </a>
+    </div>
+
+    <p class="flash-note">
+      Open to Kwarans & Non-Kwarans • Free Registration
+    </p>
+
+  </div>
+</div>
+
+<!-- NAV -->
+<header class="nav">
+  <div style="display:flex;align-items:center;gap:10px">
+    <img src="assets/logo.png" alt="KTH Logo" style="width:110px;margin-bottom:10px">
+    <strong></strong>
+  </div>
+
+  <nav>
+    <a href="#about">About</a>
+    <a href="vote.html">Vote</a>
+    <a href="register.html" class="btn primary">Register</a>
+  </nav>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+
+  <div class="hero-carousel">
+
+    <!-- Slide -->
+    <div class="hero-slide active">
+      <img src="assets/welcome.png" alt="Welcome">
+      <div class="hero-overlay">
+        <h3>Unleashing The Talent In You</h3>
+        <div class="hero-actions">
+          <a href="register.html" class="btn primary">Register as Contestant</a>
+          <a href="vote.html" class="btn outline">Voting Start Soon</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-slide">
+      <img src="assets/banner1.jpg" alt="Talent Stage">
+      <div class="hero-overlay">
+        <h3>Kwara Talent Harvest 6.0</h3>
+        <div class="hero-actions">
+          <a href="register.html" class="btn primary">Register Now</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-slide">
+      <img src="assets/banner2.jpeg" alt="Auditions">
+      <div class="hero-overlay">
+        <h3>Your Journey To Stardom Starts Here</h3>
+        <div class="hero-actions">
+          <a href="register.html" class="btn outline">Registration Is Live</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <button class="hero-nav prev">&#10094;</button>
+    <button class="hero-nav next">&#10095;</button>
+
+  </div>
+
+</section>
+
+<!-- TIMELINE -->
+<section class="timeline-section">
+  <ul class="timeline">
+    <li class="active">
+      <span>1</span>
+      <p>Registration Open</p>
+    </li>
+    <li>
+      <span>2</span>
+      <p>Screening</p>
+    </li>
+    <li>
+      <span>3</span>
+      <p>Voting Begins</p>
+    </li>
+    <li>
+      <span>4</span>
+      <p>Finale Event</p>
+    </li>
+  </ul>
+</section>
+
+
+<!-- PAST CONTESTANTS -->
+<section class="section glass">
+  <h3>Past Contestants</h3>
+  <p>Faces of talents discovered over the years</p>
+
+  <div class="scroll-wrapper">
+    <div class="scroll-track">
+      <img src="assets/past1.jpg">
+      <img src="assets/past2.jpg">
+      <img src="assets/past3.jpg">
+      <img src="assets/past4.jpg">
+      <img src="assets/past5.jpg">
+
+      <!-- duplicate for seamless loop -->
+      <img src="assets/past1.jpg">
+      <img src="assets/past2.jpg">
+      <img src="assets/past3.jpg">
+      <img src="assets/past4.jpg">
+      <img src="assets/past5.jpg">
+    </div>
+  </div>
+</section>
+
+
+<!-- APPROVED CONTESTANTS -->
+<section class="section contestants-section">
+  <div class="section-header">
+    <h2>Approved Contestants</h2>
+    <a href="vote.html" class="link">View All →</a>
+  </div>
+
+  <div id="contestants" class="contestant-scroll">
+    <!-- JS will inject cards here -->
+  </div>
+</section>
+
+<!-- COMMUNITY -->
+<section class="section community-card">
+  <h3>Join Our Public Community</h3>
+  <p>Get voting alerts, audition updates, and exclusive event info.</p>
+
+  <a href="https://chat.whatsapp.com/F9ZeBVQxdTW00sNc9sPQDw"
+     target="_blank"
+     class="btn whatsapp large">
+     Join WhatsApp Community
+  </a>
+
+  <div class="social-links">
+    <a href="https://instagram.com/kwaratalentsharvest"
+      target="_blank"
+      class="social instagram"
+      aria-label="Instagram">
+       📷
+    </a>
+
+    <a href="https://youtube.com/@parantiproduction"
+      target="_blank"
+      class="social youtube"
+      aria-label="YouTube – parantiproduction">
+       ▶️ <span>@parantiproduction</span>
+    </a>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about" class="section about-modern">
+
+  <span class="section-tag">ABOUT THE EVENT</span>
+
+  <h2>
+    Kwara Talent Harvest 6.0  
+    <span>Unleashing the Talent in You</span>
+  </h2>
+
+  <p class="lead">
+    Welcome to <strong>Kwara Talent Harvest 6.0</strong> — a game-changing talent discovery
+    platform created to identify, nurture, and elevate outstanding youths in Kwara State
+    and beyond.
+  </p>
+
+  <div class="about-grid">
+
+    <div class="about-card">
+      <h4>🌟 A Platform for Stardom</h4>
+      <p>
+        For over <strong>5 years</strong>, Kwara Talent Harvest has helped young creatives
+        gain recognition, build confidence, and turn raw talent into real opportunities.
+      </p>
+    </div>
+
+    <div class="about-card">
+      <h4>🎭 Talent Categories</h4>
+      <ul>
+        <li>Music</li>
+        <li>Dance</li>
+        <li>Chant</li>
+        <li>Modelling</li>
+        <li>Comedy</li>
+        <li>Art & Spoken Word</li>
+        <li>And many more…</li>
+      </ul>
+    </div>
+
+    <div class="about-card">
+      <h4>🔥 Impactful & Life-Changing</h4>
+      <p>
+        Many past contestants have gone on to achieve remarkable success —
+        crediting Kwara Talent Harvest as the platform that helped them
+        discover and pursue their dreams.
+      </p>
+    </div>
+
+    <div class="about-card highlight">
+      <h4>🏆 Season 6.0 Is Here</h4>
+      <p>
+        Bigger, bolder, and better — with cash prizes and rewards worth
+        <strong>₦2,000,000</strong> up for grabs.
+      </p>
+    </div>
+
+  </div>
+
+  <div class="about-cta">
+    <p>
+      Open to <strong>Kwarans and Non-Kwarans</strong>.  
+      If you have talent, this stage is for you.
+    </p>
+
+    <a href="register.html" class="btn primary large">
+      Register Now & Shine ✨
+    </a>
+  </div>
+
+  <div class="headline-sponsor">
+    <span>Headline Sponsor</span>
+    <strong>Kwara State Government</strong>
+        <!-- HEADLINE SPONSOR -->
+      <div class="sponsor headline">
+        <img src="assets/sponsors/kwara-gov.png" alt="Kwara State Government">
+      </div>
+  </div>
+
+</section>
+
+<!-- SPONSORS -->
+<section class="section">
+  <h3>Other Sponsors</h3>
+
+  <div class="scroll-wrapper">
+    <div class="scroll-track">
+
+      <!-- OTHER SPONSORS -->
+      <div class="sponsor"><img src="assets/sponsors/topstar.png"></div>
+      <div class="sponsor"><img src="assets/sponsors/hakiki.png"></div>
+      <div class="sponsor"><img src="assets/sponsors/jimpo.png"></div>
+      <div class="sponsor"><img src="assets/sponsors/phursuns.png"></div>
+      <div class="sponsor"><img src="assets/sponsors/bambi.png"></div>
+      <div class="sponsor"><img src="assets/sponsors/sharp.png"></div>
+      <div class="sponsor"><img src="assets/sponsors/queen.png"></div>
+
+      <!-- DUPLICATE FOR LOOP -->
+      <div class="sponsor headline">
+        <img src="assets/sponsors/kwara-gov.png">
+      </div>
+      <div class="sponsor"><img src="assets/sponsors/topstar.png"></div>
+      <div class="sponsor"><img src="assets/sponsors/hakiki.png"></div>
+      <div class="sponsor"><img src="assets/sponsors/jimpo.png"></div>
+      <div class="sponsor"><img src="assets/sponsors/phursuns.png"></div>
+      <div class="sponsor"><img src="assets/sponsors/bambi.png"></div>
+      <div class="sponsor"><img src="assets/sponsors/sharp.png"></div>
+      <div class="sponsor"><img src="assets/sponsors/queen.png"></div>
+
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  © 2026 Kwara Talent Harvest • Powered by Hakiki Studios
+</footer>
+
+<script src="scripts/landing.js"></script>
+</body>
+</html>

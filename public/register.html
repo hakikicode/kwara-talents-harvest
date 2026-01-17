@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <title>Register – Kwara Talent Harvest 6.0</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/theme.css">
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/mobile.css">
+
+  <style>
+    .step { display: none; }
+    .step.active { display: block; }
+
+    .progress {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 20px;
+    }
+
+    .progress div {
+      flex: 1;
+      height: 6px;
+      background: #333;
+      border-radius: 3px;
+    }
+
+    .progress .done {
+      background: var(--gold);
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 12px;
+      border-radius: 6px;
+      border: none;
+      font-family: inherit;
+    }
+
+    .nav-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="nav">
+  <img src="assets/logo.png" alt="KTH Logo" style="width:110px;margin-bottom:10px">
+  <h2>Register</h2>
+</header>
+
+<section class="hero">
+
+  <div class="progress">
+    <div id="bar"></div>
+  </div>
+
+  <div class="question-card">
+    <h3 id="question"></h3>
+    <div id="input-area"></div>
+
+    <div class="nav-buttons">
+      <button class="btn outline" id="backBtn">Back</button>
+      <button class="btn primary" id="nextBtn">Next</button>
+    </div>
+  </div>
+
+</section>
+
+<script type="module" src="scripts/register.js"></script>
+</body>
+</html>
