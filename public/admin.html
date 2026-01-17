@@ -1,19 +1,37 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Admin Panel</title>
+  <meta charset="UTF-8">
+  <title>Kwara Talent Harvest — Admin</title>
+  <link rel="stylesheet" href="styles/admin.css">
 </head>
 <body>
-<img src="assets/logo.png" alt="Kwara Talent Harvest Logo" style="height:42px">
-<h2>Admin Login</h2>
-<input id="username" placeholder="Username">
-<input id="password" type="password" placeholder="Password">
-<button onclick="login()">Login</button>
 
-<hr>
+<div class="container">
 
-<h2>Pending Contestants</h2>
-<div id="list"></div>
+  <!-- LOGIN -->
+  <div id="loginBox" class="glass">
+    <img src="assets/logo.png" style="height:42px">
+    <h2>Admin Login</h2>
+
+    <input id="username" placeholder="Username">
+    <input id="password" type="password" placeholder="Password">
+
+    <button onclick="login()">Login</button>
+    <p id="status"></p>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="glass" style="display:none">
+    <div class="topbar">
+      <h3>Pending Contestants</h3>
+      <button class="logout" onclick="logout()">Logout</button>
+    </div>
+
+    <div id="list"></div>
+  </div>
+
+</div>
 
 <script src="scripts/admin.js"></script>
 </body>
