@@ -5,26 +5,26 @@ import {
   update
 } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 
-/* ===== AUTH ===== */
+/* ================= AUTH ================= */
 
-function login() {
-  const u = username.value;
-  const p = password.value;
+window.login = function () {
+  const u = document.getElementById("username").value;
+  const p = document.getElementById("password").value;
 
   if (u === "admin" && p === "pass") {
     localStorage.setItem("adminAuth", "true");
     loadDashboard();
   } else {
-    alert("Invalid login");
+    alert("Invalid login details");
   }
-}
+};
 
-function logout() {
+window.logout = function () {
   localStorage.removeItem("adminAuth");
   location.reload();
-}
+};
 
-/* ===== UI ===== */
+/* ================= UI ================= */
 
 const loginBox = document.getElementById("loginBox");
 const dashboard = document.getElementById("dashboard");
@@ -37,7 +37,7 @@ function loadDashboard() {
   loadContestants();
 }
 
-/* ===== FETCH DATA ===== */
+/* ================= DATA ================= */
 
 async function loadContestants() {
   pendingList.innerHTML = "";
@@ -55,7 +55,7 @@ async function loadContestants() {
     card.innerHTML = `
       <h4>${c.stage_name || "No Stage Name"}</h4>
       <p><b>Name:</b> ${c.full_name}</p>
-      <p><b>Talent:</b> ${c.talents?.join(", ")}</p>
+      <p><b>Talent:</b> ${(c.talents || []).join(", ")}</p>
     `;
 
     if (c.status === "pending") {
@@ -72,17 +72,14 @@ async function loadContestants() {
   });
 }
 
-/* ===== APPROVE ===== */
-
 async function approve(id) {
   await update(ref(db, "contestants/" + id), {
     status: "approved"
   });
-
   loadContestants();
 }
 
-/* ===== INIT ===== */
+/* ================= INIT ================= */
 
 if (localStorage.getItem("adminAuth")) {
   loadDashboard();
