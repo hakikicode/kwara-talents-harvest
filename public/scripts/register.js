@@ -5,18 +5,18 @@ import { ref, push } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-da
 
 const questions = [
   { q: "What is your full name?", id: "fullName", type: "text", required: true },
-  { q: "Stage name (optional)", id: "stageName", type: "text" },
+  { q: "Stage name", id: "stageName", type: "text" },
   { q: "How old are you?", id: "age", type: "number", required: true },
 
   {
-    q: "Select your gender (optional)",
+    q: "Select your gender",
     id: "gender",
     type: "select",
     options: ["Male", "Female", "Other"]
   },
 
   {
-    q: "WhatsApp number (Nigeria only, 11-14 digits)",
+    q: "WhatsApp number",
     id: "whatsapp",
     type: "tel",
     required: true
@@ -139,7 +139,7 @@ else if (step.type === "select-multi") {
   else if (step.type === "social") {
     input = document.createElement("div");
     input.innerHTML = `
-      <p>👉 <a href="${step.follow}" target="_blank"><strong>Follow & Engage Here</strong></a></p>
+      <p>👇👇👇 <a href="${step.follow}" target="_blank"><strong><h2>Follow & Engage Here</h2></strong></a>☝️ ☝️ ☝️ </p>
       <input placeholder="Your username" id="username">
       <input placeholder="Proof link (post/comment/video)" id="proof" type="url">
     `;
@@ -191,7 +191,7 @@ function validate() {
     if (step.id === "whatsapp") {
       const regex = /^\d{11,14}$/;
       if (!regex.test(answers.whatsapp)) {
-        alert("Please enter a valid Nigerian WhatsApp number (11-14 digits)");
+        alert("Please enter a valid WhatsApp number");
         return false;
       }
     }

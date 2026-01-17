@@ -1,10 +1,158 @@
-<h2>🎉 Registration Successful!</h2>
-<p>Thank you for registering for Kwara Talent Harvest 6.0</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Registration Successful | Kwara Talent Harvest 6.0</title>
 
-<a href="https://chat.whatsapp.com/F9ZeBVQxdTW00sNc9sPQDw" target="_blank">
-  Join WhatsApp Community
-</a>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont;
+      background: linear-gradient(135deg, #0b1020, #12172c);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
 
-<br><br>
+    .card {
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(12px);
+      border-radius: 18px;
+      max-width: 480px;
+      width: 100%;
+      padding: 28px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+      text-align: center;
+      animation: fadeIn 0.8s ease;
+    }
 
-<a href="index.html">Back to Homepage</a>
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .icon {
+      font-size: 56px;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      margin-bottom: 8px;
+    }
+
+    p {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      opacity: 0.9;
+    }
+
+    .steps {
+      text-align: left;
+      margin: 20px 0;
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .steps li {
+      margin-bottom: 10px;
+      font-size: 0.9rem;
+    }
+
+    .btn {
+      display: block;
+      text-decoration: none;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-weight: 600;
+      margin-top: 12px;
+      transition: all 0.2s ease;
+    }
+
+    .btn.primary {
+      background: linear-gradient(135deg, #ffb703, #ff9f1c);
+      color: #000;
+    }
+
+    .btn.primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(255,183,3,0.35);
+    }
+
+    .btn.secondary {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+    }
+
+    .social {
+      margin-top: 18px;
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      font-size: 1.5rem;
+    }
+
+    .social a {
+      text-decoration: none;
+      color: #fff;
+      transition: transform 0.2s ease;
+    }
+
+    .social a:hover {
+      transform: scale(1.2);
+    }
+
+    footer {
+      margin-top: 18px;
+      font-size: 0.8rem;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="icon">🎉</div>
+
+    <h1>Registration Successful!</h1>
+    <p>
+      Welcome to <strong>Kwara Talent Harvest 6.0</strong>.<br>
+      Your journey to stardom has officially begun.
+    </p>
+
+    <ul class="steps">
+      <li>✅ Your registration has been received</li>
+      <li>📲 Join the public WhatsApp community below</li>
+      <li>📩 Await audition updates & announcements</li>
+    </ul>
+
+    <a 
+      href="https://chat.whatsapp.com/F9ZeBVQxdTW00sNc9sPQDw" 
+      target="_blank" 
+      class="btn primary"
+    >
+      Join Contestants WhatsApp Community
+    </a>
+
+    <a href="index.html" class="btn secondary">
+      Back to Homepage
+    </a>
+
+    <div class="social">
+      <a href="https://instagram.com/kwaratalentsharvest" target="_blank">📷</a>
+      <a href="https://www.tiktok.com/@kwaratalentsharvest" target="_blank">🎵</a>
+      <a href="https://youtube.com/@parantiproduction" target="_blank">▶️</a>
+    </div>
+
+    <footer>
+      © 2026 Kwara Talent Harvest • Season 6.0
+    </footer>
+  </div>
+
+</body>
+</html>
