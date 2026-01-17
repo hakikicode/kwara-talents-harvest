@@ -102,38 +102,38 @@ function render() {
     input.oninput = e => answers[step.id] = e.target.value;
   }
 
-  /* ===== MULTI SELECT ===== */
-  else if (step.type === "select-multi") {
-    input = document.createElement("div");
-    step.options.forEach(o => {
-      const label = document.createElement("label");
-      label.style.display = "block";
+  /* ===== MULTI SELECT DROPDOWN ===== */
+else if (step.type === "select-multi") {
+  input = document.createElement("select");
+  input.multiple = true;
+  input.style.width = "100%";
+  input.style.padding = "8px";
+  input.style.borderRadius = "6px";
+  
+  step.options.forEach(o => {
+    const option = document.createElement("option");
+    option.value = o;
+    option.textContent = o;
+    if (answers.talents?.includes(o)) option.selected = true;
+    input.appendChild(option);
+  });
 
-      const checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.value = o;
-      if (answers.talents?.includes(o)) checkbox.checked = true;
+  input.onchange = () => {
+    answers.talents = [...input.selectedOptions].map(o => o.value);
+    render(); // re-render to show "Others" input
+  };
 
-      checkbox.onchange = () => {
-        answers.talents = answers.talents || [];
-        if (checkbox.checked) answers.talents.push(o);
-        else answers.talents = answers.talents.filter(v => v !== o);
-        render(); // re-render to show "Others" input
-      };
-
-      label.appendChild(checkbox);
-      label.append(" " + o);
-      input.appendChild(label);
-    });
-
-    if (answers.talents?.includes("Others")) {
-      const other = document.createElement("input");
-      other.placeholder = "Specify your talent";
-      other.value = answers.otherTalent || "";
-      other.oninput = e => answers.otherTalent = e.target.value;
-      input.appendChild(other);
-    }
+  // Show "Others" input if selected
+  if (answers.talents?.includes("Others")) {
+    const other = document.createElement("input");
+    other.placeholder = "Specify your talent";
+    other.value = answers.otherTalent || "";
+    other.oninput = e => answers.otherTalent = e.target.value;
+    other.style.marginTop = "8px";
+    inputArea.appendChild(other);
   }
+}
+
 
   /* ===== SOCIAL TASK ===== */
   else if (step.type === "social") {
