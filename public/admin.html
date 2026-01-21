@@ -1,10 +1,21 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Admin Dashboard</title>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard – Kwara Talent Harvest</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="styles/admin.css">
 </head>
+
 <body>
+
+<!-- CONTESTANT MODAL -->
+<div id="modal" class="modal hidden">
+  <div class="modal-card">
+    <span class="close" onclick="closeModal()">×</span>
+    <div id="modalContent"></div>
+  </div>
+</div>
 
 <div class="container">
 
@@ -18,16 +29,32 @@
 
   <!-- DASHBOARD -->
   <div id="dashboard" class="glass" style="display:none">
+
     <div class="topbar">
       <h2>Admin Dashboard</h2>
       <button onclick="logout()">Logout</button>
     </div>
+
+    <!-- STATS -->
+    <div class="stats">
+      <div>Total <span id="statTotal">0</span></div>
+      <div>Approved <span id="statApproved">0</span></div>
+      <div>Pending <span id="statPending">0</span></div>
+      <div>Votes <span id="statVotes">0</span></div>
+    </div>
+
+    <input
+      id="search"
+      placeholder="Search by name or stage name"
+    />
 
     <h3>⏳ Pending Contestants</h3>
     <div id="pendingList"></div>
 
     <h3>✅ Approved Contestants</h3>
     <div id="approvedList"></div>
+
+    <button onclick="exportCSV()">Export CSV</button>
   </div>
 
 </div>

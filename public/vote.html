@@ -1,11 +1,24 @@
-<h2>Vote Your Favorite Talent</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Vote – Kwara Talent Harvest</title>
+  <meta name="viewport" content="width=device-width">
+  <link rel="icon" href="assets/favicon.png">
+  <link rel="stylesheet" href="styles/voting.css">
+</head>
+<body>
 
-<select id="contestant"></select>
+<header class="top">
+  <a href="index.html">
+    <img src="assets/logo.png" class="logo">
+  </a>
+  <h1>Vote Your Favorite Talent</h1>
+  <p>₦300 per vote + ₦100 platform fee</p>
+</header>
 
-<input type="number" id="votes" min="1" value="1">
+<section class="grid" id="contestants"></section>
 
-<input placeholder="Phone (optional)" id="phone">
-
-<button onclick="pay()">Vote Now</button>
-
-<script src="scripts/vote.js"></script>
+<script type="module" src="scripts/voting.js"></script>
+</body>
+</html>
