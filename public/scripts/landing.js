@@ -58,38 +58,56 @@ auto();
 
 
 // ======= REGISTRATION COUNTDOWN =======
-const registrationDeadline = new Date("2026-02-10T00:00:00").getTime(); // Feb 10, 2026 midnight
+const registrationDeadline = new Date("2026-02-10T23:59:59").getTime(); // Feb 10 end of day
 
 function updateRegistrationStatus() {
   const now = new Date().getTime();
   const timeLeft = registrationDeadline - now;
 
-  // Select all registration buttons
   const registerButtons = document.querySelectorAll('a[href="register.html"]');
+  const popupCountdown = document.getElementById("popupCountdown");
+  const pageCountdown = document.getElementById("pageCountdown");
+  const popupTitle = document.getElementById("popupTitle");
 
   if (timeLeft <= 0) {
-    // Registration closed
+    // ===== CLOSED STATE =====
     registerButtons.forEach(btn => {
-      btn.href = "#"; // disable link
-      btn.classList.remove("primary");
-      btn.classList.add("disabled"); // optional: add a disabled style
+      btn.href = "#";
+      btn.classList.add("disabled");
       btn.onclick = (e) => {
         e.preventDefault();
         alert("Registration is closed. Shortlisted candidates will be contacted and voting will open soon.");
       };
       btn.innerText = "Registration Closed";
     });
-  } else {
-    // Optional: Show countdown in console or on page
-    const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-    
-    console.log(`Registration opens in ${days}d ${hours}h ${minutes}m ${seconds}s`);
+
+    if (popupTitle) {
+      popupTitle.innerText = "Registration Closed";
+    }
+
+    if (popupCountdown) {
+      popupCountdown.innerText = "Shortlisted candidates will be contacted. Voting opens soon.";
+    }
+
+    if (pageCountdown) {
+      pageCountdown.innerText = "Registration Closed • Voting opens soon";
+    }
+
+    return;
   }
+
+  // ===== COUNTDOWN STATE =====
+  const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+  const text = `Registration closes in ${days}d ${hours}h ${minutes}m ${seconds}s`;
+
+  if (popupCountdown) popupCountdown.innerText = text;
+  if (pageCountdown) pageCountdown.innerText = text;
 }
 
-// Update every second
+// Run every second
 setInterval(updateRegistrationStatus, 1000);
-updateRegistrationStatus(); // initial check
+updateRegistrationStatus();
