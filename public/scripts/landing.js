@@ -58,7 +58,7 @@ auto();
 
 
 // ======= REGISTRATION COUNTDOWN =======
-const registrationDeadline = new Date("2026-03-13T23:59:59").getTime(); // Extended 1 week
+const registrationDeadline = new Date("2026-03-15T23:59:59").getTime(); // Tomorrow midnight 
 
 function updateRegistrationStatus() {
   const now = new Date().getTime();
