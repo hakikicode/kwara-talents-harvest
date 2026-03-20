@@ -87,8 +87,7 @@ updateRegistrationStatus();
 
 // ======= VOTING STATE =======
 
-const votingStartDate = new Date("2026-03-16T00:00:00").getTime();
-let votingOpen = false;
+let votingOpen = true;
 
 function checkVotingState() {
   const now = new Date().getTime();
