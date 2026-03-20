@@ -90,26 +90,23 @@ updateRegistrationStatus();
 let votingOpen = true;
 
 function checkVotingState() {
-  const now = new Date().getTime();
-
-  if (now >= votingStartDate) {
-    votingOpen = true;
-
-    // Change hero button
-    document.querySelectorAll(".hero-actions a").forEach(btn => {
-      if (btn.innerText.includes("Voting")) {
-        btn.innerText = "Vote Now";
-        btn.href = "#contestants";
-        btn.classList.remove("outline");
-        btn.classList.add("primary");
-      }
-    });
-
-    loadContestants();
-  }
+  votingOpen = true;
+  loadContestants(); // always load
 }
 
 checkVotingState();
+
+    // Change hero button
+    document.querySelectorAll(".hero-actions a").forEach(btn => {
+  if (btn.innerText.includes("Voting")) {
+    btn.innerText = "Vote Now";
+    btn.href = "vote.html";
+    btn.classList.remove("outline");
+    btn.classList.add("primary");
+  }
+    });
+
+    loadContestants();
 
 import { db } from "../firebase/setup.js";
 import { ref, onValue } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
