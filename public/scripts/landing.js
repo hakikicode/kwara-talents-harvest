@@ -58,54 +58,26 @@ auto();
 
 
 // ======= REGISTRATION COUNTDOWN =======
-const registrationDeadline = new Date("2026-03-15T23:59:59").getTime(); // Tomorrow midnight 
-
 function updateRegistrationStatus() {
-  const now = new Date().getTime();
-  const timeLeft = registrationDeadline - now;
-
   const registerButtons = document.querySelectorAll('a[href="register.html"]');
   const popupCountdown = document.getElementById("popupCountdown");
   const pageCountdown = document.getElementById("pageCountdown");
   const popupTitle = document.getElementById("popupTitle");
 
-  if (timeLeft <= 0) {
-    // ===== CLOSED STATE =====
-    registerButtons.forEach(btn => {
-      btn.href = "#";
-      btn.classList.add("disabled");
-      btn.onclick = (e) => {
-        e.preventDefault();
-        alert("Registration is closed. Shortlisted candidates will be contacted and voting will open soon.");
-      };
-      btn.innerText = "Registration Closed";
-    });
+  // FORCE CLOSED
+  registerButtons.forEach(btn => {
+    btn.href = "#";
+    btn.classList.add("disabled");
+    btn.onclick = (e) => {
+      e.preventDefault();
+      alert("Registration is closed. You can now vote for your favorite contestant.");
+    };
+    btn.innerText = "Registration Closed";
+  });
 
-    if (popupTitle) {
-      popupTitle.innerText = "Registration Closed";
-    }
-
-    if (popupCountdown) {
-      popupCountdown.innerText = "Shortlisted candidates will be contacted. Voting opens soon.";
-    }
-
-    if (pageCountdown) {
-      pageCountdown.innerText = "Registration Closed • Voting opens soon";
-    }
-
-    return;
-  }
-
-  // ===== COUNTDOWN STATE =====
-  const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-
-  const text = `Registration closes in ${days}d ${hours}h ${minutes}m ${seconds}s`;
-
-  if (popupCountdown) popupCountdown.innerText = text;
-  if (pageCountdown) pageCountdown.innerText = text;
+  if (popupTitle) popupTitle.innerText = "Registration Closed";
+  if (popupCountdown) popupCountdown.innerText = "Voting is now live!";
+  if (pageCountdown) pageCountdown.innerText = "Voting is LIVE 🔥";
 }
 
 // Run every second
