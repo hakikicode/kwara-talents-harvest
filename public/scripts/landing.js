@@ -111,3 +111,80 @@ function updateRegistrationStatus() {
 // Run every second
 setInterval(updateRegistrationStatus, 1000);
 updateRegistrationStatus();
+
+
+// ======= VOTING STATE =======
+
+const votingStartDate = new Date("2026-03-16T00:00:00").getTime();
+let votingOpen = false;
+
+function checkVotingState() {
+  const now = new Date().getTime();
+
+  if (now >= votingStartDate) {
+    votingOpen = true;
+
+    // Change hero button
+    document.querySelectorAll(".hero-actions a").forEach(btn => {
+      if (btn.innerText.includes("Voting")) {
+        btn.innerText = "Vote Now";
+        btn.href = "#contestants";
+        btn.classList.remove("outline");
+        btn.classList.add("primary");
+      }
+    });
+
+    loadContestants();
+  }
+}
+
+checkVotingState();
+
+import { db } from "../firebase/setup.js";
+import { ref, onValue } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
+
+function loadContestants() {
+  const container = document.getElementById("contestants");
+
+  if (!container) return;
+
+  onValue(ref(db, "contestants"), snap => {
+    container.innerHTML = "";
+
+    const data = snap.val() || {};
+
+    Object.entries(data).forEach(([id, c]) => {
+      if (c.status !== "approved") return;
+
+      const card = document.createElement("div");
+      card.className = "vote-card";
+
+      card.innerHTML = `
+        <img src="${c.image || 'assets/default.png'}">
+
+        <h4>${c.stage_name}</h4>
+        <p>${c.full_name}</p>
+
+        <p>🔥 ${c.votes || 0} Votes</p>
+
+        <button class="btn vote-btn"
+          onclick="voteFromLanding('${id}', '${c.stage_name}')">
+          🗳 Vote Now
+        </button>
+      `;
+
+      container.appendChild(card);
+    });
+  });
+}
+
+window.voteFromLanding = (id, name) => {
+
+  if (!votingOpen) {
+    alert("Voting has not started yet");
+    return;
+  }
+
+  // redirect to full voting page
+  window.location.href = `vote.html`;
+};

@@ -1,0 +1,43 @@
+<input type="file" id="image">
+<input type="text" id="stage_name" placeholder="Stage Name">
+<input type="text" id="full_name" placeholder="Full Name">
+
+<button onclick="upload()">Submit</button>
+
+<script>
+    import { db } from "../firebase/setup.js";
+import { ref, set } from "firebase/database";
+
+import {
+  getStorage,
+  ref as sRef,
+  uploadBytes,
+  getDownloadURL
+} from "https://www.gstatic.com/firebasejs/12.8.0/firebase-storage.js";
+
+const storage = getStorage();
+
+async function upload() {
+
+  const file = document.getElementById("image").files[0];
+  const stage_name = document.getElementById("stage_name").value;
+  const full_name = document.getElementById("full_name").value;
+
+  const id = Date.now();
+
+  const storageRef = sRef(storage, `contestants/${id}`);
+  await uploadBytes(storageRef, file);
+
+  const url = await getDownloadURL(storageRef);
+
+  await set(ref(db, "contestants/" + id), {
+    stage_name,
+    full_name,
+    image: url,
+    votes: 0,
+    status: "pending"
+  });
+
+  alert("Submitted for approval");
+}
+</script>
