@@ -137,8 +137,8 @@ function loadContestants() {
 
         <button class="btn vote-btn"
           onclick="voteFromLanding('${id}', '${c.stage_name}')">
-          🗳 Vote Now
-        </button>
+        🗳 Vote Now
+      </button>
       `;
 
       container.appendChild(card);
@@ -147,12 +147,5 @@ function loadContestants() {
 }
 
 window.voteFromLanding = (id, name) => {
-
-  if (!votingOpen) {
-    alert("Voting has not started yet");
-    return;
-  }
-
-  // redirect to full voting page
   window.location.href = `vote.html`;
 };
