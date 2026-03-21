@@ -64,24 +64,24 @@ function updateRegistrationStatus() {
   const pageCountdown = document.getElementById("pageCountdown");
   const popupTitle = document.getElementById("popupTitle");
 
-  // FORCE CLOSED
   registerButtons.forEach(btn => {
     btn.href = "#";
     btn.classList.add("disabled");
+
     btn.onclick = (e) => {
       e.preventDefault();
-      alert("Registration is closed. You can now vote for your favorite contestant.");
+      alert("Registration is closed. Voting is now live.");
     };
+
     btn.innerText = "Registration Closed";
   });
 
   if (popupTitle) popupTitle.innerText = "Registration Closed";
-  if (popupCountdown) popupCountdown.innerText = "Voting is now live!";
+  if (popupCountdown) popupCountdown.innerText = "Voting is now LIVE 🔥";
   if (pageCountdown) pageCountdown.innerText = "Voting is LIVE 🔥";
 }
 
 // Run every second
-setInterval(updateRegistrationStatus, 1000);
 updateRegistrationStatus();
 
 
@@ -91,22 +91,19 @@ let votingOpen = true;
 
 function checkVotingState() {
   votingOpen = true;
-  loadContestants(); // always load
+  loadContestants();
 }
 
 checkVotingState();
 
     // Change hero button
-    document.querySelectorAll(".hero-actions a").forEach(btn => {
-  if (btn.innerText.includes("Voting")) {
+document.querySelectorAll(".hero-actions a").forEach(btn => {
+  if (btn.getAttribute("href") === "vote.html") {
     btn.innerText = "Vote Now";
-    btn.href = "vote.html";
     btn.classList.remove("outline");
     btn.classList.add("primary");
-  }
-    });
-
-    loadContestants();
+    }
+  });
 
 import { db } from "../firebase/setup.js";
 import { ref, onValue } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
