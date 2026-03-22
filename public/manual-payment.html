@@ -1,0 +1,45 @@
+<h2>Manual Payment</h2>
+
+<p>
+Bank: Ecobank<br>
+Account Name: Kwara Talent Harvest<br>
+Account Number: 4820114717
+</p>
+
+<p id="amount"></p>
+
+<input id="payer" placeholder="Your Name">
+<input id="reference" placeholder="Transfer Reference">
+
+<button onclick="submitProof()">I Have Paid</button>
+
+<script>
+
+const params = new URLSearchParams(location.search);
+
+const contestantId = params.get("contestantId");
+const votes = params.get("votes");
+
+document.getElementById("amount").innerText =
+  "Amount: ₦" + (votes * 350);
+
+async function submitProof(){
+
+  const payer = document.getElementById("payer").value;
+  const reference = document.getElementById("reference").value;
+
+  await fetch("/api/manual-payment",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      contestantId,
+      votes,
+      payer,
+      reference
+    })
+  });
+
+  alert("Payment submitted. Await confirmation.");
+  location.href="/vote.html";
+}
+</script>
