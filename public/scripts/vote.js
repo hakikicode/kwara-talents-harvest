@@ -5,7 +5,7 @@ async function loadContestants() {
 
   try {
 
-    const res = await fetch("/api/contestants");
+    const res = await fetch("https://www.kwaratalentsharvest.com.ng/api/contestants");
     const contestants = await res.json();
 
     list.innerHTML = "";
