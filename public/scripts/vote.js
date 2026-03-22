@@ -19,30 +19,30 @@ async function loadContestants() {
       card.className = "vote-card";
 
       card.innerHTML = `
-        <img src="${c.image}"
-             onerror="this.src='assets/default.png'">
+  <img src="${c.image}"
+       class="contestant-img"
+       onerror="this.src='assets/default.png'">
 
-        <p class="votes">🔥 0 Votes</p>
+  <p class="votes">🔥 0 Votes</p>
 
-        <input type="number" min="1" value="1"
-               id="qty-${c.id}" />
+  <input type="number" min="1" value="1" id="qty-${c.id}" />
 
-        <button class="btn vote-btn"
-          onclick="startVote('${c.id}')">
-          🗳 Vote Now — ₦${VOTE_PRICE}
-        </button>
+  <button class="btn vote-btn"
+    onclick="startVote('${c.id}')">
+    🗳 Vote Now — ₦${VOTE_PRICE}
+  </button>
 
-        <div class="share-box">
-          <button onclick="copyLink('${link}')">
-            🔗 Copy
-          </button>
+  <div class="share-box">
+    <button onclick="copyLink('${location.origin}/contestant.html?id=${c.id}')">
+      🔗 Copy
+    </button>
 
-          <a target="_blank"
-            href="https://wa.me/?text=Vote here ${link}">
-            WhatsApp
-          </a>
-        </div>
-      `;
+    <a target="_blank"
+      href="https://wa.me/?text=Vote for contestant ${c.id}">
+      WhatsApp
+    </a>
+  </div>
+`;
 
       list.appendChild(card);
     });

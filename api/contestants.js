@@ -1,4 +1,14 @@
 export default async function handler(req, res) {
+
+  // ✅ CORS FIX
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
   try {
 
     const response = await fetch(
@@ -9,10 +19,10 @@ export default async function handler(req, res) {
 
     const contestants = files
       .filter(file =>
-        /\.(jpg|jpeg|png|webp)$/i.test(file.name)
+        file.name.match(/\.(jpg|jpeg|png|webp)$/i)
       )
       .map((file, index) => ({
-        id: index + 1,
+        id: `CT${index + 1}`,   // identifier only
         image: file.download_url,
         votes: 0
       }));
