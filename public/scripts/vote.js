@@ -1,12 +1,6 @@
 import { db } from "../firebase/setup.js";
 import { ref, onValue } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 
-const list = document.getElementById("contestants");
-
-const VOTE_PRICE = 350;
-
-const list = document.getElementById("contestants");
-const VOTE_PRICE = 350;
 
 async function loadContestants() {
 
