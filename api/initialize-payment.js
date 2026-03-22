@@ -2,7 +2,7 @@ export default async function handler(req, res) {
 
   const { contestantId, votes } = req.body;
 
-  if (!email || !contestantId || !votes) {
+  if (!contestantId || !votes) {
     return res.status(400).json({ error: "Missing fields" });
   }
 
@@ -19,7 +19,6 @@ export default async function handler(req, res) {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          email,
           amount,
           callback_url:
             `${process.env.BASE_URL}/success.html`,
