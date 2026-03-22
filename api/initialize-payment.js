@@ -21,7 +21,7 @@ export default async function handler(req, res) {
 
         // SPLIT
         subaccount: process.env.ECOBANK_SUBACCOUNT,
-        transaction_charge: 35000 // ₦350 in kobo
+        transaction_charge: 27500 // ₦275 in kobo
       })
     });
 

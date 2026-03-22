@@ -36,7 +36,15 @@ body {
 
 .vote-card:hover { transform:translateY(-6px); box-shadow:0 20px 40px rgba(0,0,0,.5); }
 
-.vote-card img { width:100%; height:180px; object-fit:cover; border-radius:12px; }
+
+
+.vote-card img {
+  width: 100%;
+  height: auto;          /* ✅ allow full image */
+  object-fit: contain;   /* ✅ show entire poster */
+  border-radius: 12px;
+  background: #000;      /* nice poster background */
+}
 
 .vote-card h3 { font-size:1.3rem; margin:0.5rem 0; }
 
