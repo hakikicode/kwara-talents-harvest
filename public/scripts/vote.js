@@ -137,22 +137,11 @@ function getDeviceId() {
 ================================ */
 window.startVote = async (contestantId) => {
 
-  if (!data.authorization_url) {
-
-  const manual = confirm(
-    "Online payment unavailable.\n\nPay manually via bank transfer?"
-  );
-
-  if (manual) {
-    window.location.href =
-      `/manual-payment.html?contestantId=${contestantId}&votes=${qty}`;
-  }
-
-  return;
-}
-
   const qty =
     Number(document.getElementById(`qty-${contestantId}`).value) || 1;
+
+  const email = prompt("Enter your email:");
+  if (!email) return;
 
   /* ---- Anti spam cooldown ---- */
   const lastVote = localStorage.getItem("last_vote_time");
@@ -176,18 +165,34 @@ window.startVote = async (contestantId) => {
         email,
         contestantId,
         votes: qty,
-        deviceId: getDeviceId() // anti fraud signal
+        deviceId: getDeviceId()
       })
     });
 
     const data = await res.json();
 
-    if (!data.authorization_url) {
-      alert("Payment initialization failed");
+    // 🔥 HANDLE ERROR FIRST
+    if (!res.ok) {
       console.error(data);
+      alert(data.error || "Payment initialization failed");
       return;
     }
 
+    if (!data.authorization_url) {
+
+      const manual = confirm(
+        "Online payment unavailable.\n\nPay manually?"
+      );
+
+      if (manual) {
+        window.location.href =
+          `/manual-payment.html?contestantId=${contestantId}&votes=${qty}`;
+      }
+
+      return;
+    }
+
+    // ✅ SUCCESS
     window.location.href = data.authorization_url;
 
   } catch (err) {
