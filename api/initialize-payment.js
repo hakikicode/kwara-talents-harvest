@@ -1,6 +1,6 @@
 export default async function handler(req, res) {
 
-  const { email, contestantId, votes } = req.body;
+  const { contestantId, votes } = req.body;
 
   if (!email || !contestantId || !votes) {
     return res.status(400).json({ error: "Missing fields" });
