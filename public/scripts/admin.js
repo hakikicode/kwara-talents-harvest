@@ -205,3 +205,8 @@ if (localStorage.getItem("adminAuth")) {
 }
 
 searchInput.oninput = () => listenContestants();
+
+await runTransaction(
+  ref(db, `contestants/${contestantId}/votes`),
+  v => (v || 0) + votes
+);

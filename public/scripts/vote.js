@@ -137,8 +137,19 @@ function getDeviceId() {
 ================================ */
 window.startVote = async (contestantId) => {
 
-  const email = prompt("Enter your email:");
-  if (!email) return;
+  if (!data.authorization_url) {
+
+  const manual = confirm(
+    "Online payment unavailable.\n\nPay manually via bank transfer?"
+  );
+
+  if (manual) {
+    window.location.href =
+      `/manual-payment.html?contestantId=${contestantId}&votes=${qty}`;
+  }
+
+  return;
+}
 
   const qty =
     Number(document.getElementById(`qty-${contestantId}`).value) || 1;
