@@ -137,13 +137,13 @@ function getDeviceId() {
 ================================ */
 window.startVote = async (contestantId) => {
 
-  const qty =
-    Number(document.getElementById(`qty-${contestantId}`).value) || 1;
-
   const email = prompt("Enter your email:");
   if (!email) return;
 
-  /* ---- Anti spam cooldown ---- */
+  const qty =
+    Number(document.getElementById(`qty-${contestantId}`).value) || 1;
+
+  // Anti-spam
   const lastVote = localStorage.getItem("last_vote_time");
   const now = Date.now();
 
@@ -162,26 +162,20 @@ window.startVote = async (contestantId) => {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        email,
+        email, // ✅ FIXED
         contestantId,
-        votes: qty,
-        deviceId: getDeviceId()
+        votes: qty
       })
     });
 
     const data = await res.json();
 
-    // 🔥 HANDLE ERROR FIRST
-    if (!res.ok) {
-      console.error(data);
-      alert(data.error || "Payment initialization failed");
-      return;
-    }
-
     if (!data.authorization_url) {
 
+      console.error(data);
+
       const manual = confirm(
-        "Online payment unavailable.\n\nPay manually?"
+        "Payment failed.\n\nDo you want to pay manually?"
       );
 
       if (manual) {
@@ -192,7 +186,7 @@ window.startVote = async (contestantId) => {
       return;
     }
 
-    // ✅ SUCCESS
+    // ✅ Redirect to Paystack
     window.location.href = data.authorization_url;
 
   } catch (err) {

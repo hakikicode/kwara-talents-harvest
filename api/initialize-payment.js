@@ -1,12 +1,14 @@
 export default async function handler(req, res) {
 
-  const { contestantId, votes } = req.body;
+  const { contestantId, votes, email } = req.body;
 
-  if (!contestantId || !votes) {
-    return res.status(400).json({ error: "Missing fields" });
+  if (!contestantId || !votes || !email) {
+    return res.status(400).json({
+      error: "Missing fields (email, contestantId, votes required)"
+    });
   }
 
-  const amount = Number(votes) * 350 * 100;
+  const amount = Number(votes) * 350 * 100; // kobo
 
   try {
 
@@ -19,19 +21,31 @@ export default async function handler(req, res) {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
+          email, // ✅ REQUIRED
           amount,
-          callback_url:
-            `${process.env.BASE_URL}/success.html`,
+
+          callback_url: `${process.env.BASE_URL}/success.html`,
 
           metadata: {
             contestantId,
             votes
           },
 
-          ...(process.env.ECOBANK_SUBACCOUNT && {
-            subaccount: process.env.ECOBANK_SUBACCOUNT,
-            transaction_charge: 27500
-          })
+          // ✅ SPLIT PAYMENT (REAL FIX)
+          split: {
+            type: "flat",
+            currency: "NGN",
+            subaccounts: [
+              {
+                subaccount: process.env.ECOBANK_SUBACCOUNT,
+                share: 27500 * votes // ₦275
+              },
+              {
+                subaccount: process.env.ACCESSBANK_SUBACCOUNT,
+                share: 7500 * votes // ₦75
+              }
+            ]
+          }
         })
       }
     );
