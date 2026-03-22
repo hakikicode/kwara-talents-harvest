@@ -1,3 +1,4 @@
+import { db } from "../firebase/setup.js";
 import {
   ref,
   onValue
