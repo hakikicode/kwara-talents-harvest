@@ -73,7 +73,6 @@ async function loadContestants() {
   }
 }
 
-loadContestants();
 
 window.startVote = async (contestantId) => {
 
