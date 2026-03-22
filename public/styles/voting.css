@@ -36,7 +36,11 @@ body {
 
 .vote-card:hover { transform:translateY(-6px); box-shadow:0 20px 40px rgba(0,0,0,.5); }
 
-
+.contestant-img{
+  width:100%;
+  height:auto;
+  object-fit:contain;
+}
 
 .vote-card img {
   width: 100%;
