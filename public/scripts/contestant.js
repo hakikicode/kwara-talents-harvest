@@ -53,9 +53,11 @@ document.getElementById("profile").innerHTML = `
   </div>
 `;
 
+const VOTE_PRICE = 350;
+
 document.getElementById("count").oninput = e => {
   const qty = Math.max(1, e.target.value);
-  document.getElementById("amount").textContent = qty * 400;
+  document.getElementById("amount").textContent = qty * VOTE_PRICE;
 };
 
 window.copyLink = () => {
@@ -63,7 +65,31 @@ window.copyLink = () => {
   alert("Link copied!");
 };
 
-window.vote = () => {
-  const qty = document.getElementById("count").value;
-  alert(`Proceed to pay ₦${qty * 400} via Opay (coming next)`);
+window.vote = async () => {
+  const qty = Number(document.getElementById("count").value);
+  const email = prompt("Enter your email:");
+
+  if (!email) return;
+
+  try {
+    const res = await fetch("/api/initialize-payment", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        email,
+        contestantId: id,
+        votes: qty
+      })
+    });
+
+    const data = await res.json();
+
+    window.location.href = data.authorization_url;
+
+  } catch (err) {
+    alert("Payment failed");
+    console.error(err);
+  }
 };

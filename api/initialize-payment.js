@@ -1,5 +1,7 @@
 export default async function handler(req, res) {
-  const { email, contestantId } = req.body;
+  const { email, contestantId, votes } = req.body;
+
+  const amount = votes * 350 * 100; // Paystack uses kobo
 
   try {
     const response = await fetch("https://api.paystack.co/transaction/initialize", {
@@ -10,12 +12,16 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         email,
-        amount: 35000, // in kobo (₦350)
+        amount,
         callback_url: `${process.env.BASE_URL}/success.html`,
         metadata: {
-          contestantId
+          contestantId,
+          votes
         },
-        subaccount: process.env.DEVELOPER_SUBACCOUNT_CODE
+
+        // SPLIT
+        subaccount: process.env.ECOBANK_SUBACCOUNT,
+        transaction_charge: 35000 // ₦350 in kobo
       })
     });
 

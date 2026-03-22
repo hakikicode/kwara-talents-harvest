@@ -14,7 +14,7 @@ export default async function handler(req, res) {
   await db.collection("votes_log").add({
     contestant_id,
     votes,
-    amount: votes * 375,
+    amount: votes * 350,
     txn_id,
     phone,
     created_at: new Date()

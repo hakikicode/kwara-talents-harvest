@@ -6,10 +6,10 @@ export default async function handler(req, res) {
   const { contestantId, amount } = req.body;
 
   try {
-    // ⚠️ OPay doesn't have public standard API like Paystack
-    // So you simulate payment OR integrate via merchant dashboard
+    // ⚠️ use API  Paystack
+    // real payment OR integrate via merchant dashboard
 
-    // For now, redirect to manual payment instruction page
+    // Or, redirect to manual payment instruction page
     const paymentUrl = `kwaratalentsharvest.com.ng/pay.html?contestantId=${contestantId}&amount=${amount}`;
 
     res.status(200).json({ paymentUrl });

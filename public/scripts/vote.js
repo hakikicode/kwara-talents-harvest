@@ -1,63 +1,63 @@
 import { db } from "../firebase/setup.js";
-import { ref, onValue } from
-"https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
+import { ref, onValue } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 
 const list = document.getElementById("contestants");
 
 const VOTE_PRICE = 350;
 
-onValue(ref(db, "contestants"), snap => {
+const list = document.getElementById("contestants");
+const VOTE_PRICE = 350;
+
+async function loadContestants() {
+
+  const res = await fetch("/api/contestants");
+  const contestants = await res.json();
+
   list.innerHTML = "";
-  const data = snap.val() || {};
 
-  Object.entries(data).forEach(([id, c]) => {
-    if (c.status !== "approved") return;
-
-    const link = `${location.origin}/contestant.html?id=${id}`;
+  contestants.forEach(c => {
 
     const card = document.createElement("div");
     card.className = "vote-card";
 
     card.innerHTML = `
-      <img src="${c.image || 'assets/default.png'}">
+      <img src="${c.image}"
+           onerror="this.src='assets/default.png'">
 
-      <h3>${c.stage_name}</h3>
-      <p>${c.full_name}</p>
+      <p class="votes">🔥 0 Votes</p>
 
-      <p class="votes">Votes: ${c.votes || 0}</p>
+      <input type="number" min="1" value="1" id="qty-${c.id}" />
 
       <button class="btn vote-btn"
-        onclick="startVote('${id}','${c.stage_name}')">
+        onclick="startVote('${c.id}')">
         🗳 Vote Now — ₦${VOTE_PRICE}
       </button>
 
       <div class="share-box">
-        <button onclick="copyLink('${link}')">🔗 Copy</button>
+      <button onclick="copyLink('${location.origin}/contestant.html?id=${id}')">
+       🔗 Copy
+      </button>
+    </div>
 
         <a target="_blank"
-          href="https://wa.me/?text=Vote for ${c.stage_name} on Kwara Talent Harvest ${link}">
+          href="https://wa.me/?text=Vote for ${id} ${link}">
           WhatsApp
-        </a>
-
-        <a target="_blank"
-          href="https://www.facebook.com/sharer/sharer.php?u=${link}">
-          Facebook
-        </a>
-
-        <a target="_blank"
-          href="https://twitter.com/intent/tweet?text=Vote for ${c.stage_name}&url=${link}">
-          X
         </a>
       </div>
     `;
 
     list.appendChild(card);
   });
-});
-window.startVote = async (contestantId, name) => {
+}
 
-  const email = prompt("Enter your email to continue:");
+loadContestants();
+
+window.startVote = async (contestantId) => {
+
+  const email = prompt("Enter your email:");
   if (!email) return;
+
+  const qty = document.getElementById(`qty-${contestantId}`).value || 1;
 
   try {
     const res = await fetch("/api/initialize-payment", {
@@ -67,16 +67,23 @@ window.startVote = async (contestantId, name) => {
       },
       body: JSON.stringify({
         email,
-        contestantId
+        contestantId,
+        votes: Number(qty)
       })
     });
 
     const data = await res.json();
 
+    // 🔥 PAYSTACK POPUP (better UX)
     window.location.href = data.authorization_url;
 
   } catch (err) {
     alert("Payment failed");
     console.error(err);
   }
+};
+
+window.copyLink = link => {
+  navigator.clipboard.writeText(link);
+  alert("Link copied!");
 };

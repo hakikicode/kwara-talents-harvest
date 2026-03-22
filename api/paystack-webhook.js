@@ -18,10 +18,11 @@ export default async function handler(req, res) {
   if (event.event === "charge.success") {
 
     const contestantId = event.data.metadata.contestantId;
+    const votes = event.data.metadata.votes || 1;
 
     await runTransaction(
       ref(db, `contestants/${contestantId}/votes`),
-      v => (v || 0) + 1
+      v => (v || 0) + votes
     );
   }
 

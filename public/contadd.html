@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin – Contestants</title>
+<meta name="viewport" content="width=device-width">
+<link rel="stylesheet" href="styles/voting.css">
+</head>
+
+<body>
+
+<h2>🎛 Manage Contestants</h2>
+
+<!-- UPLOAD -->
+<div class="card">
+  <h3>Add Contestant</h3>
+
+  <input type="file" id="imageUpload">
+
+  <input id="githubImage" placeholder="OR enter GitHub image name (e.g. john.jpg)">
+
+  <button onclick="addContestant()">Add</button>
+</div>
+<button onclick="deleteSelected()" style="background:red;color:white;">
+  🗑 Delete Selected
+</button>
+<button onclick="selectAll()">☑ Select All</button>
+
+<hr>
+
+<h3>All Contestants</h3>
+<div id="list"></div>
+
+<script type="module" src="scripts/contsadd.js"></script>
+
+</body>
+</html>

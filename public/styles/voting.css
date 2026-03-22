@@ -131,3 +131,15 @@ footer { text-align:center; opacity:.5; padding:2rem; }
 .share-box button:hover, .share-box a:hover {
   background:#16a34a;
 }
+
+.progress {
+  height: 6px;
+  background: #eee;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.bar {
+  height: 100%;
+  background: #ffb703;
+}

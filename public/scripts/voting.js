@@ -17,7 +17,7 @@ onValue(ref(db, "contestants"), snap => {
     card.className = "vote-card";
 
     card.innerHTML = `
-      <img src="${c.image || 'assets/default.png'}">
+      <img src="/public/contestants/${c.image}">
       <h3>${c.stage_name}</h3>
       <p>${c.full_name}</p>
 
