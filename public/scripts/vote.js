@@ -1,47 +1,55 @@
-import { db } from "../firebase/setup.js";
-import { ref, onValue } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
-
+const list = document.getElementById("contestants");
+const VOTE_PRICE = 350;
 
 async function loadContestants() {
 
-  const res = await fetch("/api/contestants");
-  const contestants = await res.json();
+  try {
 
-  list.innerHTML = "";
+    const res = await fetch("/api/contestants");
+    const contestants = await res.json();
 
-  contestants.forEach(c => {
+    list.innerHTML = "";
 
-    const card = document.createElement("div");
-    card.className = "vote-card";
+    contestants.forEach(c => {
 
-    card.innerHTML = `
-      <img src="${c.image}"
-           onerror="this.src='assets/default.png'">
+      const link =
+        `${location.origin}/contestant.html?id=${c.id}`;
 
-      <p class="votes">🔥 0 Votes</p>
+      const card = document.createElement("div");
+      card.className = "vote-card";
 
-      <input type="number" min="1" value="1" id="qty-${c.id}" />
+      card.innerHTML = `
+        <img src="${c.image}"
+             onerror="this.src='assets/default.png'">
 
-      <button class="btn vote-btn"
-        onclick="startVote('${c.id}')">
-        🗳 Vote Now — ₦${VOTE_PRICE}
-      </button>
+        <p class="votes">🔥 0 Votes</p>
 
-      <div class="share-box">
-      <button onclick="copyLink('${location.origin}/contestant.html?id=${id}')">
-       🔗 Copy
-      </button>
-    </div>
+        <input type="number" min="1" value="1"
+               id="qty-${c.id}" />
 
-        <a target="_blank"
-          href="https://wa.me/?text=Vote for ${id} ${link}">
-          WhatsApp
-        </a>
-      </div>
-    `;
+        <button class="btn vote-btn"
+          onclick="startVote('${c.id}')">
+          🗳 Vote Now — ₦${VOTE_PRICE}
+        </button>
 
-    list.appendChild(card);
-  });
+        <div class="share-box">
+          <button onclick="copyLink('${link}')">
+            🔗 Copy
+          </button>
+
+          <a target="_blank"
+            href="https://wa.me/?text=Vote here ${link}">
+            WhatsApp
+          </a>
+        </div>
+      `;
+
+      list.appendChild(card);
+    });
+
+  } catch (err) {
+    console.error("Failed loading contestants:", err);
+  }
 }
 
 loadContestants();
