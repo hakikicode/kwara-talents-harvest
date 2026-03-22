@@ -18,49 +18,53 @@ async function loadContestants() {
 
     contestants.forEach(c => {
 
-      const votesEl = card.querySelector(".votes");
+      const link = `${location.origin}/contestant.html?id=${c.id}`;
 
-    onValue(
-      ref(db, `contestants/${c.id}/votes`),
-      snap => {
-        const votes = snap.val() || 0;
-        votesEl.textContent = `🔥 ${votes} Votes`;
-      }
-        );
-
-      const link =
-        `${location.origin}/contestant.html?id=${c.id}`;
-
+      // ✅ CREATE CARD FIRST
       const card = document.createElement("div");
       card.className = "vote-card";
 
       card.innerHTML = `
-  <img src="${c.image}"
-       class="contestant-img"
-       onerror="this.src='assets/default.png'">
+        <img src="${c.image}"
+             class="contestant-img"
+             onerror="this.src='assets/default.png'">
 
-  <p class="votes">🔥 0 Votes</p>
+        <p class="votes">🔥 0 Votes</p>
 
-  <input type="number" min="1" value="1" id="qty-${c.id}" />
+        <input type="number" min="1" value="1" id="qty-${c.id}" />
 
-  <button class="btn vote-btn"
-    onclick="startVote('${c.id}')">
-    🗳 Vote Now — ₦${VOTE_PRICE}
-  </button>
+        <button class="btn vote-btn"
+          onclick="startVote('${c.id}')">
+          🗳 Vote Now — ₦${VOTE_PRICE}
+        </button>
 
-  <div class="share-box">
-    <button onclick="copyLink('${location.origin}/contestant.html?id=${c.id}')">
-      🔗 Copy
-    </button>
+        <div class="share-box">
+          <button onclick="copyLink('${link}')">
+            🔗 Copy
+          </button>
 
-    <a target="_blank"
-      href="https://wa.me/?text=Vote for contestant ${c.id}">
-      WhatsApp
-    </a>
-  </div>
-`;
+          <a target="_blank"
+            href="https://wa.me/?text=Vote for contestant ${c.id} ${link}">
+            WhatsApp
+          </a>
+        </div>
+      `;
 
+      // ✅ NOW card exists — safe to query
+      const votesEl = card.querySelector(".votes");
+
+      // ✅ LIVE VOTE LISTENER
+      onValue(
+        ref(db, `contestants/${c.id}/votes`),
+        snap => {
+          const votes = snap.val() || 0;
+          votesEl.textContent = `🔥 ${votes} Votes`;
+        }
+      );
+
+      // ✅ ADD TO PAGE
       list.appendChild(card);
+
     });
 
   } catch (err) {
