@@ -86,7 +86,13 @@ window.vote = async () => {
 
     const data = await res.json();
 
-    window.location.href = data.authorization_url;
+    if (!data.authorization_url) {
+    alert("Payment initialization failed");
+    console.error(data);
+    return;
+  }
+
+  window.location.href = data.authorization_url;
 
   } catch (err) {
     alert("Payment failed");

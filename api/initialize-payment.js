@@ -27,6 +27,13 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
+    if (!data.status) {
+      console.error(data);
+      return res.status(400).json({
+       error: "Paystack initialization failed"
+      });
+    }
+
     res.status(200).json({
       authorization_url: data.data.authorization_url
     });
