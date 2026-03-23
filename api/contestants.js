@@ -34,12 +34,3 @@ export default async function handler(req, res) {
     res.status(500).json({ error: "Failed to load contestants" });
   }
 }
-
-await set(newRef, {
-  image: imageUrl,
-  stage_name: stageName,
-  full_name: fullName,
-  votes: 0,
-  status: "approved",
-  created_at: Date.now()
-});

@@ -211,11 +211,3 @@ window.copyLink = link => {
   startLiveVotes();
 })();
 
-const fileName = githubName || file.name;
-
-const clean = decodeURIComponent(fileName)
-  .replace(/\.[^/.]+$/, "")
-  .replace(/[-_]/g, " ");
-
-const stageName = clean.toUpperCase();
-const fullName = clean;
