@@ -37,29 +37,35 @@ async function loadContestants() {
 
       card.innerHTML = `
         <img src="${c.image}"
-          class="contestant-img"
-          loading="lazy"
-          onerror="this.src='assets/default.png'">
+        class="contestant-img"
+        loading="lazy"
+        onerror="this.src='assets/default.png'">
 
-        <p class="votes">🔥 0 Votes</p>
+      <p class="votes">🔥 0 Votes</p>
 
-        <input type="number" min="1" value="1"
-          id="qty-${c.id}" />
+      <!-- ✅ PROGRESS BAR -->
+      <div class="progress">
+        <div class="bar" id="bar-${c.id}" style="width:0%"></div>
+      </div>
 
-        <button class="btn vote-btn"
-          onclick="startVote('${c.id}')">
-          🗳 Vote Now — ₦${VOTE_PRICE}
-        </button>
+      <input type="number" min="1" value="1"
+        id="qty-${c.id}" />
 
-        <div class="share-box">
-          <button onclick="copyLink('${link}')">🔗 Copy</button>
+      <button class="btn vote-btn"
+        onclick="startVote('${c.id}')">
+        🗳 Vote Now — ₦${VOTE_PRICE}
+      </button>
 
-          <a target="_blank"
-            href="https://wa.me/?text=Vote for contestant ${c.id} ${link}">
-            WhatsApp
-          </a>
-        </div>
-      `;
+      <div class="share-box">
+        <button onclick="copyLink('${link}')">🔗 Copy</button>
+
+        <a target="_blank"
+          href="https://wa.me/?text=Vote for contestant ${c.id} ${link}">
+          WhatsApp
+        </a>
+      </div>
+    `;
+
 
       // store references
       cardsMap[c.id] = {
@@ -86,6 +92,15 @@ function startLiveVotes() {
     const data = snap.val();
     if (!data) return;
 
+    let maxVotes = 0;
+
+    // find highest votes (for scaling)
+    Object.values(data).forEach(c => {
+      if ((c.votes || 0) > maxVotes) {
+        maxVotes = c.votes;
+      }
+    });
+
     const sortable = [];
 
     Object.entries(data).forEach(([id, c]) => {
@@ -94,8 +109,19 @@ function startLiveVotes() {
 
       const votes = c.votes || 0;
 
+      // ✅ Update text
       cardsMap[id].votesEl.textContent =
         `🔥 ${votes} Votes`;
+
+      // ✅ Update progress bar
+      const bar = document.getElementById(`bar-${id}`);
+
+      if (bar) {
+        const percent =
+          maxVotes === 0 ? 0 : (votes / maxVotes) * 100;
+
+        bar.style.width = percent + "%";
+      }
 
       sortable.push({
         id,
@@ -104,7 +130,7 @@ function startLiveVotes() {
       });
     });
 
-    // AUTO LEADERBOARD SORT
+    // ✅ AUTO SORT (leaderboard)
     sortable
       .sort((a, b) => b.votes - a.votes)
       .forEach(item => list.appendChild(item.element));

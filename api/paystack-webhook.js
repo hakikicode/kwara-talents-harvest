@@ -18,7 +18,7 @@ export default async function handler(req, res) {
   if (event.event === "charge.success") {
 
     const contestantId = event.data.metadata.contestantId;
-    const votes = event.data.metadata.votes || 1;
+    const votes = Number(event.data.metadata.votes || 1); // ✅ FIX
 
     await runTransaction(
       ref(db, `contestants/${contestantId}/votes`),
