@@ -1,37 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>Admin – Contestants</title>
-<meta name="viewport" content="width=device-width">
-<link rel="stylesheet" href="styles/voting.css">
+  <title>Admin Panel</title>
 </head>
-
 <body>
 
-<h2>🎛 Manage Contestants</h2>
+<h2>Manual Vote</h2>
 
-<!-- UPLOAD -->
-<div class="card">
-  <h3>Add Contestant</h3>
+<input id="contestant" placeholder="contestant id">
+<input id="votes" type="number" placeholder="votes">
 
-  <input type="file" id="imageUpload">
-
-  <input id="githubImage" placeholder="OR enter GitHub image name (e.g. john.jpg)">
-
-  <button onclick="addContestant()">Add</button>
-</div>
-<button onclick="deleteSelected()" style="background:red;color:white;">
-  🗑 Delete Selected
-</button>
-<button onclick="selectAll()">☑ Select All</button>
+<button onclick="addVotes()">Add Votes</button>
 
 <hr>
 
-<h3>All Contestants</h3>
-<div id="list"></div>
+<h2>Recover Paystack Payments</h2>
+<button onclick="recover()">Recover Missing Votes</button>
 
-<script type="module" src="scripts/contsadd.js"></script>
+<pre id="log"></pre>
 
+<script src="scripts/contsadd.js"></script>
 </body>
 </html>

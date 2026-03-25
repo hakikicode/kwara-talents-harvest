@@ -1,52 +1,54 @@
 import { db } from "../firebase/admin.js";
 
-export default async function handler(req, res) {
+export default async function handler(req,res){
 
-  const paystack = await fetch(
-    "https://api.paystack.co/transaction?status=success",
-    {
-      headers: {
-        Authorization:
-          `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
-      }
-    }
-  );
-
-  const result = await paystack.json();
-
+  let page = 1;
   let recovered = 0;
 
-  for (const tx of result.data) {
+  while(true){
 
-    const reference = tx.reference;
-    const contestantId = tx.metadata?.contestantId;
-    const votes = Number(tx.metadata?.votes || 1);
+    const r = await fetch(
+      `https://api.paystack.co/transaction?status=success&page=${page}`,
+      {
+        headers:{
+          Authorization:`Bearer ${process.env.PAYSTACK_SECRET_KEY}`
+        }
+      }
+    );
 
-    if (!contestantId) continue;
+    const result = await r.json();
 
-    const logRef =
-      db.ref(`transactions/${reference}`);
+    if(!result.data.length) break;
 
-    const exists = await logRef.get();
+    for(const tx of result.data){
 
-    if (exists.exists()) continue;
+      const reference = tx.reference;
+      const contestantId = tx.metadata?.contestantId;
+      const votes = Number(tx.metadata?.votes || 1);
 
-    // restore missing vote
-    await logRef.set({
-      contestantId,
-      votes,
-      recovered: true,
-      created_at: Date.now()
-    });
+      if(!contestantId) continue;
 
-    await db
-      .ref(`contestants/${contestantId}/votes`)
-      .transaction(v => (v || 0) + votes);
+      const logRef = db.ref(`transactions/${reference}`);
+      const exists = await logRef.get();
 
-    recovered++;
+      if(exists.exists()) continue;
+
+      await logRef.set({
+        contestantId,
+        votes,
+        recovered:true,
+        created_at:Date.now()
+      });
+
+      await db
+        .ref(`contestants/${contestantId}/votes`)
+        .transaction(v => (v||0)+votes);
+
+      recovered++;
+    }
+
+    page++;
   }
 
-  res.json({
-    recovered
-  });
+  res.json({ recovered });
 }
