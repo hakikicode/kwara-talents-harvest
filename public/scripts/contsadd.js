@@ -1,36 +1,62 @@
+const log = document.getElementById("log");
+
 async function addVotes() {
 
   const contestantId =
-    document.getElementById("contestant").value;
+    document.getElementById("contestant").value.trim();
 
   const votes =
     Number(document.getElementById("votes").value);
 
-  const res = await fetch("/api/admin-add-votes", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      contestantId,
-      votes
-    })
-  });
+  if (!contestantId || !votes) {
+    alert("Enter contestant id and votes");
+    return;
+  }
 
-  const data = await res.json();
+  log.textContent = "Adding votes...";
 
-  log.textContent =
-    "Votes added ✅ " + JSON.stringify(data, null, 2);
+  try {
+
+    const res = await fetch("/api/admin-add-votes", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        contestantId,
+        votes
+      })
+    });
+
+    const data = await res.json();
+
+    log.textContent =
+      "✅ Votes added\n" +
+      JSON.stringify(data, null, 2);
+
+  } catch (err) {
+    console.error(err);
+    log.textContent = "❌ Failed adding votes";
+  }
 }
 
 async function recover() {
 
-  const res =
-    await fetch("/api/recover-payments");
+  log.textContent = "Recovering payments...";
 
-  const data = await res.json();
+  try {
 
-  log.textContent =
-    "Recovered payments ✅\n" +
-    JSON.stringify(data, null, 2);
+    const res =
+      await fetch("/api/recover-payments");
+
+    const data = await res.json();
+
+    log.textContent =
+      "✅ Recovery Complete\n" +
+      JSON.stringify(data, null, 2);
+
+  } catch (err) {
+    console.error(err);
+    log.textContent = "❌ Recovery failed";
+  }
 }

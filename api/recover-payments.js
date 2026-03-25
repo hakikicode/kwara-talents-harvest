@@ -6,9 +6,8 @@ export default async function handler(req,res){
   let recovered = 0;
 
   while(true){
-
-    const r = await fetch(
-      `https://api.paystack.co/transaction?status=success&page=${page}`,
+      const r = await fetch(
+  `https://api.paystack.co/transaction?status=success&page=${page}&perPage=100`,
       {
         headers:{
           Authorization:`Bearer ${process.env.PAYSTACK_SECRET_KEY}`
@@ -18,12 +17,15 @@ export default async function handler(req,res){
 
     const result = await r.json();
 
-    if(!result.data.length) break;
+    if(!result.data || result.data.length === 0) break;
 
     for(const tx of result.data){
 
       const reference = tx.reference;
-      const contestantId = tx.metadata?.contestantId;
+      const contestantId =
+  data.metadata?.contestantId
+    ?.replace(/\.[^/.]+$/, "")
+    ?.replace(/[.#$\[\]]/g, "");
       const votes = Number(tx.metadata?.votes || 1);
 
       if(!contestantId) continue;

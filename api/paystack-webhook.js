@@ -41,7 +41,10 @@ export default async function handler(req, res) {
   const data = event.data;
 
   const reference = data.reference;
-  const contestantId = data.metadata?.contestantId;
+  const contestantId =
+  data.metadata?.contestantId
+    ?.replace(/\.[^/.]+$/, "")
+    ?.replace(/[.#$\[\]]/g, "");
   const votes = Number(data.metadata?.votes || 1);
 
   if (!reference || !contestantId)

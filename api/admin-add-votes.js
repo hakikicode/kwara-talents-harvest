@@ -19,3 +19,8 @@ export default async function handler(req,res){
 
   res.json({ success:true });
 }
+
+const safeId = contestantId
+  .replace(/\.[^/.]+$/, "")
+  .replace(/[.#$\[\]]/g, "")
+  .ref(`contestants/${safeId}/votes`);

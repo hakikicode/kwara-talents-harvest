@@ -1,25 +1,34 @@
+const MAX_VOTES_TARGET = 100000;
+
 import { db } from "../firebase/setup.js";
 import {
   ref,
-  get, 
+  get,
   set,
   onValue
 } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 
-
 const list = document.getElementById("contestants");
 const VOTE_PRICE = 350;
 
-/* ===============================
-   GLOBAL CARD STORE (PERFORMANCE)
-================================ */
 const cardsMap = {};
 
 /* ===============================
-   LOAD CONTESTANTS FROM GITHUB API
+   SAFE ID HELPER
+================================ */
+function safeId(id) {
+  return id
+    .replace(/\.[^/.]+$/, "")
+    .replace(/[.#$\[\]]/g, "");
+}
+
+/* ===============================
+   LOAD CONTESTANTS
 ================================ */
 async function loadContestants() {
+
   try {
+
     const res = await fetch(
       "https://www.kwaratalentsharvest.com.ng/api/contestants"
     );
@@ -30,8 +39,10 @@ async function loadContestants() {
 
     for (const c of contestants) {
 
-      // 🔥 STEP 1: Ensure contestant exists in Firebase
-      const dbRef = ref(db, `contestants/${c.id}`);
+      const id = safeId(c.id);
+
+      // ✅ Ensure exists in Firebase
+      const dbRef = ref(db, `contestants/${id}`);
       const snap = await get(dbRef);
 
       if (!snap.exists()) {
@@ -42,12 +53,8 @@ async function loadContestants() {
         });
       }
 
-      const safeId = c.id
-        .replace(/\.[^/.]+$/, "")
-        .replace(/[.#$\[\]]/g, "");
-
-      // 🔥 STEP 2: Render UI
-      const link = `${location.origin}/contestant.html?id=${safeId}`;
+      const link =
+        `${location.origin}/contestant.html?id=${id}`;
 
       const card = document.createElement("div");
       card.className = "vote-card";
@@ -61,13 +68,13 @@ async function loadContestants() {
         <p class="votes">🔥 0 Votes</p>
 
         <div class="progress">
-          <div class="bar" id="bar-${safeId}" style="width:0%"></div>
+          <div class="bar" id="bar-${id}"></div>
         </div>
 
-        <input type="number" min="1" value="1" id="qty-${safeId}" />
+        <input type="number" min="1" value="1" id="qty-${id}" />
 
         <button class="btn vote-btn"
-          onclick="startVote('${safeId}')">
+          onclick="startVote('${id}')">
           🗳 Vote Now — ₦${VOTE_PRICE}
         </button>
 
@@ -75,13 +82,13 @@ async function loadContestants() {
           <button onclick="copyLink('${link}')">🔗 Copy</button>
 
           <a target="_blank"
-            href="https://wa.me/?text=Vote for contestant ${c.id} ${link}">
-            WhatsApp
+           href="https://wa.me/?text=Vote for contestant ${id} ${link}">
+           WhatsApp
           </a>
         </div>
       `;
 
-      cardsMap[safeId] = {
+      cardsMap[id] = {
         element: card,
         votesEl: card.querySelector(".votes")
       };
@@ -95,8 +102,7 @@ async function loadContestants() {
 }
 
 /* ===============================
-   SINGLE LIVE VOTE LISTENER
-   (EXTREMELY OPTIMIZED)
+   LIVE VOTES LISTENER
 ================================ */
 function startLiveVotes() {
 
@@ -104,15 +110,6 @@ function startLiveVotes() {
 
     const data = snap.val();
     if (!data) return;
-
-    let maxVotes = 0;
-
-    // find highest votes (for scaling)
-    Object.values(data).forEach(c => {
-      if ((c.votes || 0) > maxVotes) {
-        maxVotes = c.votes;
-      }
-    });
 
     const sortable = [];
 
@@ -122,16 +119,19 @@ function startLiveVotes() {
 
       const votes = c.votes || 0;
 
-      // ✅ Update text
+      // update text
       cardsMap[id].votesEl.textContent =
         `🔥 ${votes} Votes`;
 
-      // ✅ Update progress bar
-      const bar = document.getElementById(`bar-${id}`);
+      // progress bar
+      const bar =
+        document.getElementById(`bar-${id}`);
 
       if (bar) {
-        const percent =
-          maxVotes === 0 ? 0 : (votes / maxVotes) * 100;
+        const percent = Math.min(
+          (votes / MAX_VOTES_TARGET) * 100,
+          100
+        );
 
         bar.style.width = percent + "%";
       }
@@ -143,18 +143,19 @@ function startLiveVotes() {
       });
     });
 
-    // ✅ AUTO SORT (leaderboard)
+    // leaderboard auto-sort
     sortable
       .sort((a, b) => b.votes - a.votes)
-      .forEach(item => list.appendChild(item.element));
+      .forEach(item =>
+        list.appendChild(item.element)
+      );
+
   });
 }
 
 /* ===============================
-   ANTI-FRAUD PROTECTION
+   DEVICE ID (ANTI FRAUD)
 ================================ */
-
-// device fingerprint (lightweight)
 function getDeviceId() {
 
   let id = localStorage.getItem("device_id");
@@ -174,15 +175,17 @@ function getDeviceId() {
 /* ===============================
    START VOTE
 ================================ */
-window.startVote = async (contestantId) => {
+window.startVote = async contestantId => {
 
   const email = prompt("Enter your email:");
   if (!email) return;
 
   const qty =
-    Number(document.getElementById(`qty-${contestantId}`).value) || 1;
+    Number(
+      document.getElementById(`qty-${contestantId}`).value
+    ) || 1;
 
-  // Anti-spam
+  // anti spam
   const lastVote = localStorage.getItem("last_vote_time");
   const now = Date.now();
 
@@ -197,13 +200,12 @@ window.startVote = async (contestantId) => {
 
     const res = await fetch("/api/initialize-payment", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        email, // ✅ FIXED
+        email,
         contestantId,
-        votes: qty
+        votes: qty,
+        deviceId: getDeviceId()
       })
     });
 
@@ -211,10 +213,8 @@ window.startVote = async (contestantId) => {
 
     if (!data.authorization_url) {
 
-      console.error(data);
-
       const manual = confirm(
-        "Payment failed.\n\nDo you want to pay manually?"
+        "Payment failed.\nPay manually?"
       );
 
       if (manual) {
@@ -225,12 +225,12 @@ window.startVote = async (contestantId) => {
       return;
     }
 
-    // ✅ Redirect to Paystack
-    window.location.href = data.authorization_url;
+    window.location.href =
+      data.authorization_url;
 
   } catch (err) {
-    alert("Payment failed");
     console.error(err);
+    alert("Payment failed");
   }
 };
 
@@ -249,4 +249,3 @@ window.copyLink = link => {
   await loadContestants();
   startLiveVotes();
 })();
-
