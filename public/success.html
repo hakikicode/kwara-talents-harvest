@@ -1,4 +1,21 @@
-<h2>Payment Successful 🎉</h2>
-<p>Your vote has been recorded.</p>
+<script>
+const params = new URLSearchParams(window.location.search);
+const reference = params.get("reference");
 
-<a href="vote.html">Back to Voting</a>
+if (reference) {
+
+  fetch("/api/verify-payment?reference=" + reference)
+    .then(res => res.json())
+    .then(() => {
+
+      alert("✅ Payment successful! Votes counted.");
+
+      window.location.href = "/vote.html";
+
+    })
+    .catch(() => {
+      alert("Payment verified, but refresh voting page.");
+      window.location.href = "/vote.html";
+    });
+}
+</script>

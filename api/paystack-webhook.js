@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { db } from "../firebase/setup.js";
-import { ref, runTransaction } from "firebase/database";
+import { ref, runTransaction, get } from "firebase/database";
 
 export default async function handler(req, res) {
 
@@ -17,13 +17,29 @@ export default async function handler(req, res) {
 
   if (event.event === "charge.success") {
 
-    const contestantId = event.data.metadata.contestantId;
-    const votes = Number(event.data.metadata.votes || 1); // ✅ FIX
+    const { contestantId, votes } = event.data.metadata || {};
+
+    console.log("Webhook:", contestantId, votes);
+
+    if (!contestantId) return res.sendStatus(200);
+
+    const dbRef = ref(db, `contestants/${contestantId}`);
+
+    const snap = await get(dbRef);
+
+    // ✅ auto-create contestant if missing
+    if (!snap.exists()) {
+      await set(dbRef, {
+        votes: 0
+      });
+    }
 
     await runTransaction(
       ref(db, `contestants/${contestantId}/votes`),
-      v => (v || 0) + votes
+      v => (v || 0) + Number(votes || 1)
     );
+
+    console.log("Votes updated successfully");
   }
 
   res.sendStatus(200);

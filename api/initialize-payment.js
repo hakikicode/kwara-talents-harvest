@@ -24,7 +24,7 @@ export default async function handler(req, res) {
           email, // ✅ REQUIRED
           amount,
 
-          callback_url: `${process.env.BASE_URL}/success.html`,
+          callback_url: `${process.env.BASE_URL}/vote.html?success=true`,
 
           metadata: {
             contestantId,

@@ -1,6 +1,8 @@
 import { db } from "../firebase/setup.js";
 import {
   ref,
+  get,
+  set,
   onValue
 } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 
@@ -8,82 +10,35 @@ const list = document.getElementById("contestants");
 const VOTE_PRICE = 350;
 
 /* ===============================
-   GLOBAL CARD STORE (PERFORMANCE)
-================================ */
-const cardsMap = {};
-
-/* ===============================
-   LOAD CONTESTANTS FROM GITHUB API
+   LOAD + SYNC GITHUB → FIREBASE
 ================================ */
 async function loadContestants() {
-
   try {
-
-    const res = await fetch(
-      "https://www.kwaratalentsharvest.com.ng/api/contestants"
-    );
-
+    const res = await fetch("https://www.kwaratalentsharvest.com.ng/api/contestants");
     const contestants = await res.json();
 
-    list.innerHTML = "";
+    // ✅ Sync to Firebase
+    for (const c of contestants) {
 
-    contestants.forEach(c => {
+      const dbRef = ref(db, `contestants/${c.id}`);
+      const snap = await get(dbRef);
 
-      const link =
-        `${location.origin}/contestant.html?id=${c.id}`;
-
-      const card = document.createElement("div");
-      card.className = "vote-card";
-
-      card.innerHTML = `
-        <img src="${c.image}"
-        class="contestant-img"
-        loading="lazy"
-        onerror="this.src='assets/default.png'">
-
-      <p class="votes">🔥 0 Votes</p>
-
-      <!-- ✅ PROGRESS BAR -->
-      <div class="progress">
-        <div class="bar" id="bar-${c.id}" style="width:0%"></div>
-      </div>
-
-      <input type="number" min="1" value="1"
-        id="qty-${c.id}" />
-
-      <button class="btn vote-btn"
-        onclick="startVote('${c.id}')">
-        🗳 Vote Now — ₦${VOTE_PRICE}
-      </button>
-
-      <div class="share-box">
-        <button onclick="copyLink('${link}')">🔗 Copy</button>
-
-        <a target="_blank"
-          href="https://wa.me/?text=Vote for contestant ${c.id} ${link}">
-          WhatsApp
-        </a>
-      </div>
-    `;
-
-
-      // store references
-      cardsMap[c.id] = {
-        element: card,
-        votesEl: card.querySelector(".votes")
-      };
-
-      list.appendChild(card);
-    });
+      if (!snap.exists()) {
+        await set(dbRef, {
+          image: c.image,
+          votes: 0,
+          created_at: Date.now()
+        });
+      }
+    }
 
   } catch (err) {
-    console.error("Failed loading contestants:", err);
+    console.error("Error loading contestants:", err);
   }
 }
 
 /* ===============================
-   SINGLE LIVE VOTE LISTENER
-   (EXTREMELY OPTIMIZED)
+   LIVE RENDER FROM FIREBASE
 ================================ */
 function startLiveVotes() {
 
@@ -92,70 +47,49 @@ function startLiveVotes() {
     const data = snap.val();
     if (!data) return;
 
+    list.innerHTML = "";
+
     let maxVotes = 0;
 
-    // find highest votes (for scaling)
+    // find max votes
     Object.values(data).forEach(c => {
       if ((c.votes || 0) > maxVotes) {
         maxVotes = c.votes;
       }
     });
 
-    const sortable = [];
+    // render cards
+    Object.entries(data)
+      .sort((a, b) => (b[1].votes || 0) - (a[1].votes || 0))
+      .forEach(([id, c]) => {
 
-    Object.entries(data).forEach(([id, c]) => {
-
-      if (!cardsMap[id]) return;
-
-      const votes = c.votes || 0;
-
-      // ✅ Update text
-      cardsMap[id].votesEl.textContent =
-        `🔥 ${votes} Votes`;
-
-      // ✅ Update progress bar
-      const bar = document.getElementById(`bar-${id}`);
-
-      if (bar) {
         const percent =
-          maxVotes === 0 ? 0 : (votes / maxVotes) * 100;
+          maxVotes === 0 ? 0 : (c.votes / maxVotes) * 100;
 
-        bar.style.width = percent + "%";
-      }
+        const card = document.createElement("div");
+        card.className = "vote-card";
 
-      sortable.push({
-        id,
-        votes,
-        element: cardsMap[id].element
+        card.innerHTML = `
+          <img src="${c.image}" 
+            onerror="this.src='assets/default.png'">
+
+          <p class="votes">🔥 ${c.votes || 0} Votes</p>
+
+          <div class="progress">
+            <div class="bar" id="bar-${id}" style="width:${percent}%"></div>
+          </div>
+
+          <input type="number" min="1" value="1" id="qty-${id}" />
+
+          <button onclick="startVote('${id}')">
+            🗳 Vote — ₦${VOTE_PRICE}
+          </button>
+        `;
+
+        list.appendChild(card);
       });
-    });
 
-    // ✅ AUTO SORT (leaderboard)
-    sortable
-      .sort((a, b) => b.votes - a.votes)
-      .forEach(item => list.appendChild(item.element));
   });
-}
-
-/* ===============================
-   ANTI-FRAUD PROTECTION
-================================ */
-
-// device fingerprint (lightweight)
-function getDeviceId() {
-
-  let id = localStorage.getItem("device_id");
-
-  if (!id) {
-    id =
-      crypto.randomUUID() +
-      "-" +
-      navigator.userAgent.length;
-
-    localStorage.setItem("device_id", id);
-  }
-
-  return id;
 }
 
 /* ===============================
@@ -188,7 +122,7 @@ window.startVote = async (contestantId) => {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        email, // ✅ FIXED
+        email,
         contestantId,
         votes: qty
       })
@@ -197,22 +131,11 @@ window.startVote = async (contestantId) => {
     const data = await res.json();
 
     if (!data.authorization_url) {
-
       console.error(data);
-
-      const manual = confirm(
-        "Payment failed.\n\nDo you want to pay manually?"
-      );
-
-      if (manual) {
-        window.location.href =
-          `/manual-payment.html?contestantId=${contestantId}&votes=${qty}`;
-      }
-
+      alert("Payment initialization failed");
       return;
     }
 
-    // ✅ Redirect to Paystack
     window.location.href = data.authorization_url;
 
   } catch (err) {
@@ -222,18 +145,16 @@ window.startVote = async (contestantId) => {
 };
 
 /* ===============================
-   COPY LINK
+   SUCCESS MESSAGE
 ================================ */
-window.copyLink = link => {
-  navigator.clipboard.writeText(link);
-  alert("Link copied!");
-};
+if (new URLSearchParams(location.search).get("success")) {
+  alert("✅ Payment successful! Votes added.");
+}
 
 /* ===============================
    INIT
 ================================ */
 (async () => {
-  await loadContestants();
-  startLiveVotes();
+  await loadContestants();   // sync first
+  startLiveVotes();          // then listen
 })();
-

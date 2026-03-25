@@ -21,11 +21,18 @@ export default async function handler(req, res) {
       .filter(file =>
         file.name.match(/\.(jpg|jpeg|png|webp)$/i)
       )
-      .map((file, index) => ({
-        id: `CT${index + 1}`,   // identifier only
-        image: file.download_url,
-        votes: 0
-      }));
+      .map(file => {
+
+        const id = file.name
+          .replace(/\.[^/.]+$/, "")
+          .replace(/\s+/g, "_")
+          .toLowerCase();
+
+      return {
+        id,
+        image: file.download_url
+      };
+    });
 
     res.status(200).json(contestants);
 
@@ -34,3 +41,4 @@ export default async function handler(req, res) {
     res.status(500).json({ error: "Failed to load contestants" });
   }
 }
+
