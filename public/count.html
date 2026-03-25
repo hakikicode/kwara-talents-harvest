@@ -49,4 +49,13 @@ await runTransaction(
   ref(db, `contestants/${id}/votes`),
   v => (v || 0) + 50
 );
+await fetch("/api/manual-add-votes", {
+  method:"POST",
+  headers:{ "Content-Type":"application/json" },
+  body: JSON.stringify({
+    contestantId:"john_doe",
+    votes:20,
+    adminKey:"SECRET"
+  })
+});
 </script>
