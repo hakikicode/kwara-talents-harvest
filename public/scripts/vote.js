@@ -42,8 +42,12 @@ async function loadContestants() {
         });
       }
 
+      const safeId = c.id
+        .replace(/\.[^/.]+$/, "")
+        .replace(/[.#$\[\]]/g, "");
+
       // 🔥 STEP 2: Render UI
-      const link = `${location.origin}/contestant.html?id=${c.id}`;
+      const link = `${location.origin}/contestant.html?id=${safeId}`;
 
       const card = document.createElement("div");
       card.className = "vote-card";
@@ -57,13 +61,13 @@ async function loadContestants() {
         <p class="votes">🔥 0 Votes</p>
 
         <div class="progress">
-          <div class="bar" id="bar-${c.id}" style="width:0%"></div>
+          <div class="bar" id="bar-${safeId}" style="width:0%"></div>
         </div>
 
-        <input type="number" min="1" value="1" id="qty-${c.id}" />
+        <input type="number" min="1" value="1" id="qty-${safeId}" />
 
         <button class="btn vote-btn"
-          onclick="startVote('${c.id}')">
+          onclick="startVote('${safeId}')">
           🗳 Vote Now — ₦${VOTE_PRICE}
         </button>
 
