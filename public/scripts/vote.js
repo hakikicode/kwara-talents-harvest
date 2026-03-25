@@ -81,7 +81,7 @@ async function loadContestants() {
         </div>
       `;
 
-      cardsMap[c.id] = {
+      cardsMap[safeId] = {
         element: card,
         votesEl: card.querySelector(".votes")
       };
