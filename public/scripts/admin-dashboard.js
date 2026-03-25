@@ -87,3 +87,13 @@ window.addVotesManually = async (id, votes) => {
 
   alert("Votes added manually");
 };
+
+await fetch("/api/manual-add-votes", {
+  method:"POST",
+  headers:{ "Content-Type":"application/json" },
+  body: JSON.stringify({
+    contestantId:"john_doe",
+    votes:20,
+    adminKey:"SECRET"
+  })
+});
