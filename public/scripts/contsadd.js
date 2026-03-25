@@ -26,7 +26,7 @@ async function addVotes() {
 async function recover() {
 
   const res =
-    await fetch("/api/recover-payment");
+    await fetch("/api/recover-payments");
 
   const data = await res.json();
 
