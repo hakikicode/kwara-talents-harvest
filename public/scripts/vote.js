@@ -20,20 +20,6 @@ const cardsMap = {};
 ================================ */
 async function loadContestants() {
 
-  for (const c of contestants) {
-
-  const dbRef = ref(db, `contestants/${c.id}`);
-  const snap = await get(dbRef);
-
-  if (!snap.exists()) {
-    await set(dbRef, {
-      image: c.image,
-      votes: 0,
-      created_at: Date.now()
-    });
-  }
-}
-
   try {
 
     const res = await fetch(
@@ -254,6 +240,3 @@ window.copyLink = link => {
   startLiveVotes();
 })();
 
-if (new URLSearchParams(location.search).get("success")) {
-  alert("✅ Payment successful! Votes added.");
-}
