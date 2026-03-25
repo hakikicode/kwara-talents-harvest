@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Dashboard – KTH</title>
+<meta name="viewport" content="width=device-width">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body {
+  background:#0b0f1a;
+  color:white;
+  font-family:sans-serif;
+  padding:20px;
+}
+
+h1 { margin-bottom:20px; }
+
+.cards {
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+  gap:15px;
+  margin-bottom:30px;
+}
+
+.card {
+  background:#111827;
+  padding:20px;
+  border-radius:10px;
+}
+
+.big {
+  font-size:24px;
+  font-weight:bold;
+}
+
+.list {
+  margin-top:20px;
+}
+
+.item {
+  display:flex;
+  justify-content:space-between;
+  padding:10px;
+  border-bottom:1px solid #333;
+}
+</style>
+</head>
+
+<body>
+
+<h1>📊 Admin Dashboard</h1>
+
+<div class="cards">
+  <div class="card">
+    <p>Total Votes</p>
+    <div id="totalVotes" class="big">0</div>
+  </div>
+
+  <div class="card">
+    <p>Total Revenue</p>
+    <div id="totalRevenue" class="big">₦0</div>
+  </div>
+
+  <div class="card">
+    <p>Top Contestant</p>
+    <div id="topContestant" class="big">-</div>
+  </div>
+</div>
+
+<canvas id="chart"></canvas>
+
+<h2>🏆 Leaderboard</h2>
+<div id="leaderboard" class="list"></div>
+
+<script type="module" src="scripts/admin-dashboard.js"></script>
+
+</body>
+</html>
