@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { db } from "../firebase/setup.js";
-import { ref, runTransaction, get } from "firebase/database";
+import { ref, runTransaction, get, set } from "firebase/database";
 
 export default async function handler(req, res) {
 
@@ -17,34 +17,52 @@ export default async function handler(req, res) {
 
   if (event.event === "charge.success") {
 
-    const { contestantId, votes } = event.data.metadata || {};
+    const data = event.data;
 
-    console.log("Webhook:", contestantId, votes);
+    const reference = data.reference;
+    const contestantId = data.metadata?.contestantId;
+    const votes = Number(data.metadata?.votes || 1);
+    const amount = data.amount / 100; // convert from kobo
 
-    if (!contestantId) return res.sendStatus(200);
+    console.log("✅ PAYMENT:", reference, contestantId, votes);
 
-    const dbRef = ref(db, `contestants/${contestantId}`);
-
-    const snap = await get(dbRef);
-
-    // ✅ auto-create contestant if missing
-    if (!snap.exists()) {
-      await set(dbRef, {
-        votes: 0
-      });
+    if (!contestantId || !reference) {
+      console.log("❌ Missing data");
+      return res.sendStatus(200);
     }
 
-    await runTransaction(
-      ref(db, `contestants/${contestantId}/votes`),
-      v => (v || 0) + Number(votes || 1)
-    );
+    try {
 
-    console.log("Votes updated successfully");
+      // 🔥 STEP 1: PREVENT DUPLICATE PAYMENT
+      const logRef = ref(db, `transactions/${reference}`);
+      const existing = await get(logRef);
+
+      if (existing.exists()) {
+        console.log("⚠️ Duplicate payment ignored:", reference);
+        return res.sendStatus(200);
+      }
+
+      // 🔥 STEP 2: SAVE TRANSACTION LOG
+      await set(logRef, {
+        contestantId,
+        votes,
+        amount,
+        status: "success",
+        created_at: Date.now()
+      });
+
+      // 🔥 STEP 3: UPDATE VOTES
+      await runTransaction(
+        ref(db, `contestants/${contestantId}/votes`),
+        v => (v || 0) + votes
+      );
+
+      console.log("🔥 Votes updated:", contestantId, votes);
+
+    } catch (err) {
+      console.error("Webhook error:", err);
+    }
   }
 
   res.sendStatus(200);
-}
-
-if (type === "webhook") {
-  console.log("WEBHOOK HIT");
 }

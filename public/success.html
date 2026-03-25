@@ -1,21 +1,20 @@
-<script>
-const params = new URLSearchParams(window.location.search);
-const reference = params.get("reference");
+<script type="module">
+import { db } from "./firebase/setup.js";
+import { ref, runTransaction } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 
-if (reference) {
+const params = new URLSearchParams(location.search);
 
-  fetch("/api/verify-payment?reference=" + reference)
-    .then(res => res.json())
-    .then(() => {
+const contestantId = params.get("contestantId");
+const votes = Number(params.get("votes") || 1);
 
-      alert("✅ Payment successful! Votes counted.");
+if (contestantId) {
 
-      window.location.href = "/vote.html";
+  await runTransaction(
+    ref(db, `contestants/${contestantId}/votes`),
+    v => (v || 0) + votes
+  );
 
-    })
-    .catch(() => {
-      alert("Payment verified, but refresh voting page.");
-      window.location.href = "/vote.html";
-    });
+  alert("✅ Payment successful! Votes added.");
+  window.location.href = "/vote.html";
 }
 </script>

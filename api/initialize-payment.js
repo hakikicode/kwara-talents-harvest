@@ -10,6 +10,8 @@ export default async function handler(req, res) {
 
   const amount = Number(votes) * 350 * 100; // kobo
 
+  const reference = `KTH-${Date.now()}-${contestantId}`;
+
   try {
 
     const response = await fetch(
@@ -49,6 +51,7 @@ export default async function handler(req, res) {
         })
       }
     );
+    
 
     const data = await response.json();
 
