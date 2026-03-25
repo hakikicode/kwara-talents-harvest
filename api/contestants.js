@@ -24,8 +24,9 @@ export default async function handler(req, res) {
       .map(file => {
 
         const id = file.name
-          .replace(/\.[^/.]+$/, "")
-          .replace(/\s+/g, "_")
+          .replace(/\.[^/.]+$/, "")   // remove extension (.jpg)
+          .replace(/\s+/g, "_")       // spaces → _
+          .replace(/[.#$\[\]]/g, "")  // remove invalid Firebase chars
           .toLowerCase();
 
       return {
