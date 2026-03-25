@@ -17,20 +17,18 @@ const cardsMap = {};
 ================================ */
 async function loadContestants() {
 
-  try {
+  onValue(ref(db, "contestants"), snap => {
 
-    const res = await fetch(
-      "https://www.kwaratalentsharvest.com.ng/api/contestants"
-    );
-
-    const contestants = await res.json();
+    const data = snap.val();
+    if (!data) return;
 
     list.innerHTML = "";
 
-    contestants.forEach(c => {
+    Object.entries(data).forEach(([id, c]) => {
 
-      const link =
-        `${location.origin}/contestant.html?id=${c.id}`;
+      if (c.status !== "approved") return;
+
+      const link = `${location.origin}/contestant.html?id=${id}`;
 
       const card = document.createElement("div");
       card.className = "vote-card";
@@ -41,34 +39,31 @@ async function loadContestants() {
         loading="lazy"
         onerror="this.src='assets/default.png'">
 
-      <p class="votes">🔥 0 Votes</p>
+        <p class="votes">🔥 ${c.votes || 0} Votes</p>
 
-      <!-- ✅ PROGRESS BAR -->
-      <div class="progress">
-        <div class="bar" id="bar-${c.id}" style="width:0%"></div>
-      </div>
+        <div class="progress">
+          <div class="bar" id="bar-${id}" style="width:0%"></div>
+        </div>
 
-      <input type="number" min="1" value="1"
-        id="qty-${c.id}" />
+        <input type="number" min="1" value="1"
+          id="qty-${id}" />
 
-      <button class="btn vote-btn"
-        onclick="startVote('${c.id}')">
-        🗳 Vote Now — ₦${VOTE_PRICE}
-      </button>
+        <button class="btn vote-btn"
+          onclick="startVote('${id}')">
+          🗳 Vote Now — ₦${VOTE_PRICE}
+        </button>
 
-      <div class="share-box">
-        <button onclick="copyLink('${link}')">🔗 Copy</button>
+        <div class="share-box">
+          <button onclick="copyLink('${link}')">🔗 Copy</button>
 
-        <a target="_blank"
-          href="https://wa.me/?text=Vote for contestant ${c.id} ${link}">
-          WhatsApp
-        </a>
-      </div>
-    `;
+          <a target="_blank"
+            href="https://wa.me/?text=Vote now ${link}">
+            WhatsApp
+          </a>
+        </div>
+      `;
 
-
-      // store references
-      cardsMap[c.id] = {
+      cardsMap[id] = {
         element: card,
         votesEl: card.querySelector(".votes")
       };
@@ -76,9 +71,8 @@ async function loadContestants() {
       list.appendChild(card);
     });
 
-  } catch (err) {
-    console.error("Failed loading contestants:", err);
-  }
+  });
+
 }
 
 /* ===============================
