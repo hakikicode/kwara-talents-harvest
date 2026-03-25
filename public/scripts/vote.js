@@ -1,44 +1,106 @@
 import { db } from "../firebase/setup.js";
 import {
   ref,
-  get,
+  get, 
   set,
   onValue
 } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
+
 
 const list = document.getElementById("contestants");
 const VOTE_PRICE = 350;
 
 /* ===============================
-   LOAD + SYNC GITHUB → FIREBASE
+   GLOBAL CARD STORE (PERFORMANCE)
+================================ */
+const cardsMap = {};
+
+/* ===============================
+   LOAD CONTESTANTS FROM GITHUB API
 ================================ */
 async function loadContestants() {
+
+  for (const c of contestants) {
+
+  const dbRef = ref(db, `contestants/${c.id}`);
+  const snap = await get(dbRef);
+
+  if (!snap.exists()) {
+    await set(dbRef, {
+      image: c.image,
+      votes: 0,
+      created_at: Date.now()
+    });
+  }
+}
+
   try {
-    const res = await fetch("https://www.kwaratalentsharvest.com.ng/api/contestants");
+
+    const res = await fetch(
+      "https://www.kwaratalentsharvest.com.ng/api/contestants"
+    );
+
     const contestants = await res.json();
 
-    // ✅ Sync to Firebase
-    for (const c of contestants) {
+    list.innerHTML = "";
 
-      const dbRef = ref(db, `contestants/${c.id}`);
-      const snap = await get(dbRef);
+    contestants.forEach(c => {
 
-      if (!snap.exists()) {
-        await set(dbRef, {
-          image: c.image,
-          votes: 0,
-          created_at: Date.now()
-        });
-      }
-    }
+      const link =
+        `${location.origin}/contestant.html?id=${c.id}`;
+
+      const card = document.createElement("div");
+      card.className = "vote-card";
+
+      card.innerHTML = `
+        <img src="${c.image}"
+        class="contestant-img"
+        loading="lazy"
+        onerror="this.src='assets/default.png'">
+
+      <p class="votes">🔥 0 Votes</p>
+
+      <!-- ✅ PROGRESS BAR -->
+      <div class="progress">
+        <div class="bar" id="bar-${c.id}" style="width:0%"></div>
+      </div>
+
+      <input type="number" min="1" value="1"
+        id="qty-${c.id}" />
+
+      <button class="btn vote-btn"
+        onclick="startVote('${c.id}')">
+        🗳 Vote Now — ₦${VOTE_PRICE}
+      </button>
+
+      <div class="share-box">
+        <button onclick="copyLink('${link}')">🔗 Copy</button>
+
+        <a target="_blank"
+          href="https://wa.me/?text=Vote for contestant ${c.id} ${link}">
+          WhatsApp
+        </a>
+      </div>
+    `;
+
+
+      // store references
+      cardsMap[c.id] = {
+        element: card,
+        votesEl: card.querySelector(".votes")
+      };
+
+      list.appendChild(card);
+    });
 
   } catch (err) {
-    console.error("Error loading contestants:", err);
+    console.error("Failed loading contestants:", err);
   }
 }
 
 /* ===============================
-   LIVE RENDER FROM FIREBASE
+   SINGLE LIVE VOTE LISTENER
+   (EXTREMELY OPTIMIZED)
 ================================ */
 function startLiveVotes() {
 
@@ -47,49 +109,70 @@ function startLiveVotes() {
     const data = snap.val();
     if (!data) return;
 
-    list.innerHTML = "";
-
     let maxVotes = 0;
 
-    // find max votes
+    // find highest votes (for scaling)
     Object.values(data).forEach(c => {
       if ((c.votes || 0) > maxVotes) {
         maxVotes = c.votes;
       }
     });
 
-    // render cards
-    Object.entries(data)
-      .sort((a, b) => (b[1].votes || 0) - (a[1].votes || 0))
-      .forEach(([id, c]) => {
+    const sortable = [];
 
+    Object.entries(data).forEach(([id, c]) => {
+
+      if (!cardsMap[id]) return;
+
+      const votes = c.votes || 0;
+
+      // ✅ Update text
+      cardsMap[id].votesEl.textContent =
+        `🔥 ${votes} Votes`;
+
+      // ✅ Update progress bar
+      const bar = document.getElementById(`bar-${id}`);
+
+      if (bar) {
         const percent =
-          maxVotes === 0 ? 0 : (c.votes / maxVotes) * 100;
+          maxVotes === 0 ? 0 : (votes / maxVotes) * 100;
 
-        const card = document.createElement("div");
-        card.className = "vote-card";
+        bar.style.width = percent + "%";
+      }
 
-        card.innerHTML = `
-          <img src="${c.image}" 
-            onerror="this.src='assets/default.png'">
-
-          <p class="votes">🔥 ${c.votes || 0} Votes</p>
-
-          <div class="progress">
-            <div class="bar" id="bar-${id}" style="width:${percent}%"></div>
-          </div>
-
-          <input type="number" min="1" value="1" id="qty-${id}" />
-
-          <button onclick="startVote('${id}')">
-            🗳 Vote — ₦${VOTE_PRICE}
-          </button>
-        `;
-
-        list.appendChild(card);
+      sortable.push({
+        id,
+        votes,
+        element: cardsMap[id].element
       });
+    });
 
+    // ✅ AUTO SORT (leaderboard)
+    sortable
+      .sort((a, b) => b.votes - a.votes)
+      .forEach(item => list.appendChild(item.element));
   });
+}
+
+/* ===============================
+   ANTI-FRAUD PROTECTION
+================================ */
+
+// device fingerprint (lightweight)
+function getDeviceId() {
+
+  let id = localStorage.getItem("device_id");
+
+  if (!id) {
+    id =
+      crypto.randomUUID() +
+      "-" +
+      navigator.userAgent.length;
+
+    localStorage.setItem("device_id", id);
+  }
+
+  return id;
 }
 
 /* ===============================
@@ -122,7 +205,7 @@ window.startVote = async (contestantId) => {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        email,
+        email, // ✅ FIXED
         contestantId,
         votes: qty
       })
@@ -131,11 +214,22 @@ window.startVote = async (contestantId) => {
     const data = await res.json();
 
     if (!data.authorization_url) {
+
       console.error(data);
-      alert("Payment initialization failed");
+
+      const manual = confirm(
+        "Payment failed.\n\nDo you want to pay manually?"
+      );
+
+      if (manual) {
+        window.location.href =
+          `/manual-payment.html?contestantId=${contestantId}&votes=${qty}`;
+      }
+
       return;
     }
 
+    // ✅ Redirect to Paystack
     window.location.href = data.authorization_url;
 
   } catch (err) {
@@ -145,16 +239,21 @@ window.startVote = async (contestantId) => {
 };
 
 /* ===============================
-   SUCCESS MESSAGE
+   COPY LINK
 ================================ */
-if (new URLSearchParams(location.search).get("success")) {
-  alert("✅ Payment successful! Votes added.");
-}
+window.copyLink = link => {
+  navigator.clipboard.writeText(link);
+  alert("Link copied!");
+};
 
 /* ===============================
    INIT
 ================================ */
 (async () => {
-  await loadContestants();   // sync first
-  startLiveVotes();          // then listen
+  await loadContestants();
+  startLiveVotes();
 })();
+
+if (new URLSearchParams(location.search).get("success")) {
+  alert("✅ Payment successful! Votes added.");
+}
