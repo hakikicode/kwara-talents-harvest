@@ -45,4 +45,6 @@ export default async function handler(req, res) {
   res.sendStatus(200);
 }
 
-console.log("WEBHOOK HIT");
+if (type === "webhook") {
+  console.log("WEBHOOK HIT");
+}

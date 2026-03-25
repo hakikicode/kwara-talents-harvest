@@ -77,3 +77,13 @@ onValue(ref(db, "contestants"), snap => {
   });
 
 });
+
+window.addVotesManually = async (id, votes) => {
+
+  await runTransaction(
+    ref(db, `contestants/${id}/votes`),
+    v => (v || 0) + Number(votes)
+  );
+
+  alert("Votes added manually");
+};

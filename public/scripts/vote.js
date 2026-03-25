@@ -19,9 +19,7 @@ const cardsMap = {};
    LOAD CONTESTANTS FROM GITHUB API
 ================================ */
 async function loadContestants() {
-
   try {
-
     const res = await fetch(
       "https://www.kwaratalentsharvest.com.ng/api/contestants"
     );
@@ -30,54 +28,62 @@ async function loadContestants() {
 
     list.innerHTML = "";
 
-    contestants.forEach(c => {
+    for (const c of contestants) {
 
-      const link =
-        `${location.origin}/contestant.html?id=${c.id}`;
+      // 🔥 STEP 1: Ensure contestant exists in Firebase
+      const dbRef = ref(db, `contestants/${c.id}`);
+      const snap = await get(dbRef);
+
+      if (!snap.exists()) {
+        await set(dbRef, {
+          image: c.image,
+          votes: 0,
+          created_at: Date.now()
+        });
+      }
+
+      // 🔥 STEP 2: Render UI
+      const link = `${location.origin}/contestant.html?id=${c.id}`;
 
       const card = document.createElement("div");
       card.className = "vote-card";
 
       card.innerHTML = `
         <img src="${c.image}"
-        class="contestant-img"
-        loading="lazy"
-        onerror="this.src='assets/default.png'">
+          class="contestant-img"
+          loading="lazy"
+          onerror="this.src='assets/default.png'">
 
-      <p class="votes">🔥 0 Votes</p>
+        <p class="votes">🔥 0 Votes</p>
 
-      <!-- ✅ PROGRESS BAR -->
-      <div class="progress">
-        <div class="bar" id="bar-${c.id}" style="width:0%"></div>
-      </div>
+        <div class="progress">
+          <div class="bar" id="bar-${c.id}" style="width:0%"></div>
+        </div>
 
-      <input type="number" min="1" value="1"
-        id="qty-${c.id}" />
+        <input type="number" min="1" value="1" id="qty-${c.id}" />
 
-      <button class="btn vote-btn"
-        onclick="startVote('${c.id}')">
-        🗳 Vote Now — ₦${VOTE_PRICE}
-      </button>
+        <button class="btn vote-btn"
+          onclick="startVote('${c.id}')">
+          🗳 Vote Now — ₦${VOTE_PRICE}
+        </button>
 
-      <div class="share-box">
-        <button onclick="copyLink('${link}')">🔗 Copy</button>
+        <div class="share-box">
+          <button onclick="copyLink('${link}')">🔗 Copy</button>
 
-        <a target="_blank"
-          href="https://wa.me/?text=Vote for contestant ${c.id} ${link}">
-          WhatsApp
-        </a>
-      </div>
-    `;
+          <a target="_blank"
+            href="https://wa.me/?text=Vote for contestant ${c.id} ${link}">
+            WhatsApp
+          </a>
+        </div>
+      `;
 
-
-      // store references
       cardsMap[c.id] = {
         element: card,
         votesEl: card.querySelector(".votes")
       };
 
       list.appendChild(card);
-    });
+    }
 
   } catch (err) {
     console.error("Failed loading contestants:", err);
