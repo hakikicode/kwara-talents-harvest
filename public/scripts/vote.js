@@ -65,8 +65,6 @@ async function loadContestants() {
           loading="lazy"
           onerror="this.src='assets/default.png'">
 
-        <p class="votes">🔥 0 Votes</p>
-
         <div class="progress">
           <div class="bar" id="bar-${id}"></div>
         </div>
