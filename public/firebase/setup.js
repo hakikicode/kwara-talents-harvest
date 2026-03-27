@@ -5,7 +5,7 @@ import { getDatabase } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-
 const firebaseConfig = {
   apiKey: "AIzaSyCAGNGQra6nUp0IfiyKJEqpf9IfAwEPmt4",
   authDomain: "kwara-talent-harvest.firebaseapp.com",
-  databaseURL: "https://kwara-talent-harvest-default-rtdb.europe-west1.firebasedatabase.app",
+  databaseURL: "https://kwara-talent-harvest-default-rtdb.firebaseio.com",
   projectId: "kwara-talent-harvest",
   storageBucket: "kwara-talent-harvest.firebasestorage.app",
   messagingSenderId: "947097502504",
