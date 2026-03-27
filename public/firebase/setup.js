@@ -5,7 +5,7 @@ import { getDatabase } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-
 const firebaseConfig = {
   apiKey: "AIzaSyCAGNGQra6nUp0IfiyKJEqpf9IfAwEPmt4",
   authDomain: "kwara-talent-harvest.firebaseapp.com",
-  databaseURL: "https://kwara-talent-harvest-default-rtdb.firebaseio.com",
+  databaseURL: "https://kwara-talent-harvest-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "kwara-talent-harvest",
   storageBucket: "kwara-talent-harvest.firebasestorage.app",
   messagingSenderId: "947097502504",
@@ -13,9 +13,4 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-
-// 🔥 FORCE fallback (fix WebSocket crash)
-export const db = getDatabase(app, {
-  experimentalForceLongPolling: true,
-  useFetchStreams: false,
-});
+export const db = getDatabase(app);  // ✅ must export
