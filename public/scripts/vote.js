@@ -119,37 +119,72 @@ function startLiveVotes() {
 
     Object.entries(data).forEach(([id, c]) => {
 
-    if (!cardsMap[id]) return;
+      if (!cardsMap[id]) return;
 
-    const votes = c.votes || 0;
+      const votes = c.votes || 0;
 
-    const percent = Math.min(
-      (votes / MAX_VOTES_TARGET) * 100,
-      100
-    );
+      // ✅ Convert ALL existing votes → percentage
+      const percent = Math.min(
+        (votes / MAX_VOTES_TARGET) * 100,
+        100
+      );
 
-    // ✅ Update percentage text
-    const percentEl = document.getElementById(`percent-${id}`);
-    if (percentEl) {
-      percentEl.textContent = percent.toFixed(1) + "%";
-    }
+      // ✅ Update % text
+      const percentEl = document.getElementById(`percent-${id}`);
+      if (percentEl) {
+        percentEl.textContent = percent.toFixed(1) + "%";
+      }
 
-    // ✅ Animate bar
-    const bar = document.getElementById(`bar-${id}`);
-    if (bar) {
-      requestAnimationFrame(() => {
+      // ✅ Update bar
+      const bar = document.getElementById(`bar-${id}`);
+      if (bar) {
         bar.style.width = percent + "%";
+      }
+
+      // ===============================
+      // 🔥 TRENDING LOGIC (FIXED)
+      // ===============================
+      const prevVotes = lastVotesSnapshot[id] || 0;
+      const growth = votes - prevVotes;
+
+      lastVotesSnapshot[id] = votes;
+
+      const badge = document.getElementById(`badge-${id}`);
+
+      if (badge) {
+        if (growth > 20) {
+          badge.style.display = "block";
+          badge.textContent = "🔥 Trending";
+        } else {
+          badge.style.display = "none";
+        }
+      }
+
+      // ===============================
+      // 🎯 COLOR MILESTONE
+      // ===============================
+      if (bar) {
+        if (percent >= 75) {
+          bar.style.background =
+            "linear-gradient(90deg, #facc15, #f59e0b)";
+        } else if (percent >= 50) {
+          bar.style.background =
+            "linear-gradient(90deg, #3b82f6, #60a5fa)";
+        } else {
+          bar.style.background =
+            "linear-gradient(90deg, #22c55e, #4ade80)";
+        }
+      }
+
+      sortable.push({
+        id,
+        votes,
+        element: cardsMap[id].element
       });
-    }
 
-    sortable.push({
-      id,
-      votes,
-      element: cardsMap[id].element
     });
-  });
 
-    // leaderboard auto-sort
+    // ✅ SORT (still uses real votes internally)
     sortable
       .sort((a, b) => b.votes - a.votes)
       .forEach(item =>
@@ -257,35 +292,3 @@ window.copyLink = link => {
 })();
 
 
-/* ===============================
-   Loop
-================================ */
-const prevVotes = lastVotesSnapshot[id] || 0;
-const growth = votes - prevVotes;
-
-lastVotesSnapshot[id] = votes;
-
-// 🔥 trending logic
-const badge = document.getElementById(`badge-${id}`);
-
-if (badge) {
-  if (growth > 20) {
-    badge.style.display = "block";
-    badge.textContent = "🔥 Trending";
-  } else {
-    badge.style.display = "none";
-  }
-}
-
-if (bar) {
-  if (percent >= 75) {
-    bar.style.background =
-      "linear-gradient(90deg, #facc15, #f59e0b)";
-  } else if (percent >= 50) {
-    bar.style.background =
-      "linear-gradient(90deg, #3b82f6, #60a5fa)";
-  } else {
-    bar.style.background =
-      "linear-gradient(90deg, #22c55e, #4ade80)";
-  }
-}
