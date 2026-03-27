@@ -125,32 +125,42 @@ function startLiveVotes() {
 
       const votes = c.votes || 0;
 
-      // ✅ Convert ALL existing votes → percentage
       const percent = Math.min(
         (votes / MAX_VOTES_TARGET) * 100,
         100
       );
 
-      // ✅ Update % text
+      // ✅ Update percentage
       const percentEl = document.getElementById(`percent-${id}`);
       if (percentEl) {
         percentEl.textContent = percent.toFixed(1) + "%";
       }
 
-      // ✅ Update bar
+      // ✅ Progress bar
       const bar = document.getElementById(`bar-${id}`);
       if (bar) {
         bar.style.width = percent + "%";
       }
 
       // ===============================
-      // 🔥 TRENDING LOGIC (FIXED)
+      // 🔥 TRENDING + GROWTH
       // ===============================
       const prevVotes = lastVotesSnapshot[id] || 0;
       const growth = votes - prevVotes;
 
       lastVotesSnapshot[id] = votes;
 
+      // ✅ LIVE POP + SOUND
+      if (growth > 0) {
+        showVotePop(growth);
+
+        voteSound.currentTime = 0;
+        voteSound.play().catch(() => {});
+      }
+
+      // ===============================
+      // 🏆 BADGE
+      // ===============================
       const badge = document.getElementById(`badge-${id}`);
 
       if (badge) {
@@ -163,7 +173,24 @@ function startLiveVotes() {
       }
 
       // ===============================
-      // 🎯 COLOR MILESTONE
+      // 🚨 URGENCY
+      // ===============================
+      const urgencyEl = document.getElementById(`urgency-${id}`);
+
+      if (urgencyEl) {
+        if (percent >= 90) {
+          urgencyEl.textContent = "⚡ Almost full!";
+        } else if (percent >= 75) {
+          urgencyEl.textContent = "🔥 Going fast!";
+        } else if (percent >= 50) {
+          urgencyEl.textContent = "🚀 Halfway there!";
+        } else {
+          urgencyEl.textContent = "";
+        }
+      }
+
+      // ===============================
+      // 🎯 COLOR
       // ===============================
       if (bar) {
         if (percent >= 75) {
@@ -185,9 +212,8 @@ function startLiveVotes() {
       });
 
     });
-    
 
-    // ✅ SORT (still uses real votes internally)
+    // ✅ Sort leaderboard
     sortable
       .sort((a, b) => b.votes - a.votes)
       .forEach(item =>
@@ -195,26 +221,6 @@ function startLiveVotes() {
       );
 
   });
-    if (growth > 0) {
-    showVotePop(growth);
-
-    voteSound.currentTime = 0;
-    voteSound.play().catch(() => {});
-  }
-
-  const urgencyEl = document.getElementById(`urgency-${id}`);
-
-if (urgencyEl) {
-  if (percent >= 90) {
-    urgencyEl.textContent = "⚡ Almost full!";
-  } else if (percent >= 75) {
-    urgencyEl.textContent = "🔥 Going fast!";
-  } else if (percent >= 50) {
-    urgencyEl.textContent = "🚀 Halfway there!";
-  } else {
-    urgencyEl.textContent = "";
-  }
-}
 }
 
 /* ===============================
