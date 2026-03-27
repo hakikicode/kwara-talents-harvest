@@ -65,7 +65,7 @@ async function loadContestants() {
           loading="lazy"
           onerror="this.src='assets/default.png'">
 
-          <p class="votes">🔥</p>
+          <p class="votes" id="percent-${id}">0%</p>
 
         <div class="progress">
           <div class="bar" id="bar-${id}"></div>
@@ -77,6 +77,8 @@ async function loadContestants() {
           onclick="startVote('${id}')">
           🗳 Vote Now — ₦${VOTE_PRICE}
         </button>
+
+        <div class="badge" id="badge-${id}"></div>
 
         <div class="share-box">
           <button onclick="copyLink('${link}')">🔗 Copy</button>
@@ -104,6 +106,8 @@ async function loadContestants() {
 /* ===============================
    LIVE VOTES LISTENER
 ================================ */
+const lastVotesSnapshot = {};
+
 function startLiveVotes() {
 
   onValue(ref(db, "contestants"), snap => {
@@ -124,16 +128,18 @@ function startLiveVotes() {
       100
     );
 
-    // ✅ Show percentage instead of votes
-    cardsMap[id].votesEl.textContent =
-      `🔥 ${percent.toFixed(1)}%`;
+    // ✅ Update percentage text
+    const percentEl = document.getElementById(`percent-${id}`);
+    if (percentEl) {
+      percentEl.textContent = percent.toFixed(1) + "%";
+    }
 
-    // progress bar
-    const bar =
-      document.getElementById(`bar-${id}`);
-
+    // ✅ Animate bar
+    const bar = document.getElementById(`bar-${id}`);
     if (bar) {
-      bar.style.width = percent + "%";
+      requestAnimationFrame(() => {
+        bar.style.width = percent + "%";
+      });
     }
 
     sortable.push({
@@ -249,3 +255,37 @@ window.copyLink = link => {
   await loadContestants();
   startLiveVotes();
 })();
+
+
+/* ===============================
+   Loop
+================================ */
+const prevVotes = lastVotesSnapshot[id] || 0;
+const growth = votes - prevVotes;
+
+lastVotesSnapshot[id] = votes;
+
+// 🔥 trending logic
+const badge = document.getElementById(`badge-${id}`);
+
+if (badge) {
+  if (growth > 20) {
+    badge.style.display = "block";
+    badge.textContent = "🔥 Trending";
+  } else {
+    badge.style.display = "none";
+  }
+}
+
+if (bar) {
+  if (percent >= 75) {
+    bar.style.background =
+      "linear-gradient(90deg, #facc15, #f59e0b)";
+  } else if (percent >= 50) {
+    bar.style.background =
+      "linear-gradient(90deg, #3b82f6, #60a5fa)";
+  } else {
+    bar.style.background =
+      "linear-gradient(90deg, #22c55e, #4ade80)";
+  }
+}
