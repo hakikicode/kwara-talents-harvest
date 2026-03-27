@@ -83,6 +83,8 @@ async function loadContestants() {
         <div class="share-box">
           <button onclick="copyLink('${link}')">🔗 Copy</button>
 
+          <p class="urgency" id="urgency-${id}"></p>
+
           <a target="_blank"
            href="https://wa.me/?text=Vote for contestant ${id} ${link}">
            WhatsApp
@@ -183,6 +185,7 @@ function startLiveVotes() {
       });
 
     });
+    
 
     // ✅ SORT (still uses real votes internally)
     sortable
@@ -192,6 +195,26 @@ function startLiveVotes() {
       );
 
   });
+    if (growth > 0) {
+    showVotePop(growth);
+
+    voteSound.currentTime = 0;
+    voteSound.play().catch(() => {});
+  }
+
+  const urgencyEl = document.getElementById(`urgency-${id}`);
+
+if (urgencyEl) {
+  if (percent >= 90) {
+    urgencyEl.textContent = "⚡ Almost full!";
+  } else if (percent >= 75) {
+    urgencyEl.textContent = "🔥 Going fast!";
+  } else if (percent >= 50) {
+    urgencyEl.textContent = "🚀 Halfway there!";
+  } else {
+    urgencyEl.textContent = "";
+  }
+}
 }
 
 /* ===============================
@@ -291,4 +314,28 @@ window.copyLink = link => {
   startLiveVotes();
 })();
 
+/* ===============================
+   POPUP
+================================ */
+function showVotePop(votes) {
+  const feed = document.getElementById("live-feed");
 
+  const el = document.createElement("div");
+  el.className = "vote-pop";
+
+  el.textContent = `🔥 Someone just voted ${votes} vote${votes > 1 ? "s" : ""}`;
+
+  feed.appendChild(el);
+
+  setTimeout(() => el.remove(), 5000);
+}
+
+/* ===============================
+   SOUND
+================================ */
+const voteSound = new Audio("https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3");
+
+setInterval(() => {
+  const fakeVotes = Math.floor(Math.random() * 5) + 1;
+  showVotePop(fakeVotes);
+}, 15000);

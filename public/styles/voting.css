@@ -201,3 +201,44 @@ footer { text-align:center; opacity:.5; padding:2rem; }
   font-weight: bold;
   display: none;
 }
+
+#live-feed {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 9999;
+}
+
+.vote-pop {
+  background: #020617;
+  color: #22c55e;
+  border: 1px solid #1f2937;
+  padding: 10px 14px;
+  margin-top: 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: popIn 0.4s ease forwards,
+             fadeOut 0.5s ease forwards 4s;
+}
+
+@keyframes popIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+}
+
+.urgency {
+  font-size: 11px;
+  color: #facc15;
+  margin-top: 4px;
+}
