@@ -65,6 +65,8 @@ async function loadContestants() {
           loading="lazy"
           onerror="this.src='assets/default.png'">
 
+          <p class="votes">🔥</p>
+
         <div class="progress">
           <div class="bar" id="bar-${id}"></div>
         </div>
@@ -113,33 +115,33 @@ function startLiveVotes() {
 
     Object.entries(data).forEach(([id, c]) => {
 
-      if (!cardsMap[id]) return;
+    if (!cardsMap[id]) return;
 
-      const votes = c.votes || 0;
+    const votes = c.votes || 0;
 
-      // update text
-      cardsMap[id].votesEl.textContent =
-        `🔥 ${votes} Votes`;
+    const percent = Math.min(
+      (votes / MAX_VOTES_TARGET) * 100,
+      100
+    );
 
-      // progress bar
-      const bar =
-        document.getElementById(`bar-${id}`);
+    // ✅ Show percentage instead of votes
+    cardsMap[id].votesEl.textContent =
+      `🔥 ${percent.toFixed(1)}%`;
 
-      if (bar) {
-        const percent = Math.min(
-          (votes / MAX_VOTES_TARGET) * 100,
-          100
-        );
+    // progress bar
+    const bar =
+      document.getElementById(`bar-${id}`);
 
-        bar.style.width = percent + "%";
-      }
+    if (bar) {
+      bar.style.width = percent + "%";
+    }
 
-      sortable.push({
-        id,
-        votes,
-        element: cardsMap[id].element
-      });
+    sortable.push({
+      id,
+      votes,
+      element: cardsMap[id].element
     });
+  });
 
     // leaderboard auto-sort
     sortable

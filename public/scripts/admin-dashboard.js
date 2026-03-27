@@ -11,6 +11,7 @@ const leaderboard = document.getElementById("leaderboard");
 
 let chart;
 
+
 // 🔥 LIVE DATA
 onValue(ref(db, "contestants"), snap => {
 
