@@ -13,4 +13,9 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-export const db = getDatabase(app);  // ✅ must export
+
+// 🔥 FORCE fallback (fix WebSocket crash)
+export const db = getDatabase(app, {
+  experimentalForceLongPolling: true,
+  useFetchStreams: false,
+});
