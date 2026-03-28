@@ -1,4 +1,4 @@
-const MAX_VOTES_TARGET = 1000;
+const MAX_VOTES_TARGET = 300;
 
 import { db } from "../firebase/setup.js";
 import {
