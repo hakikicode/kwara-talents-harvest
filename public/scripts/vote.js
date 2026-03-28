@@ -21,27 +21,6 @@ function safeId(id) {
     .replace(/\.[^/.]+$/, "")
     .replace(/[.#$\[\]]/g, "");
 }
-
-async function waitForVoteUpdate(contestantId, expectedVotes, timeout = 10000) {
-  const start = Date.now();
-
-  return new Promise((resolve, reject) => {
-    const interval = setInterval(async () => {
-      const snap = await get(ref(db, `contestants/${contestantId}/votes`));
-      const currentVotes = snap.val() || 0;
-
-      if (currentVotes >= expectedVotes) {
-        clearInterval(interval);
-        resolve(currentVotes);
-      }
-
-      if (Date.now() - start > timeout) {
-        clearInterval(interval);
-        reject("Vote update timeout");
-      }
-    }, 500);
-  });
-}
 /* ===============================
    LOAD CONTESTANTS
 ================================ */
