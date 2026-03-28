@@ -4,17 +4,92 @@ import {
   onValue
 } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 
-const list = document.getElementById("list");
+const contestantsEl = document.getElementById("contestants");
+const paymentsEl = document.getElementById("payments");
 
+/* ===============================
+   🔐 BASIC PROTECTION
+================================ */
+const password = prompt("Enter admin password");
+if (password !== "admin123") {
+  document.body.innerHTML = "<h2>Access denied</h2>";
+  throw new Error("Unauthorized");
+}
+
+/* ===============================
+   🏆 LOAD CONTESTANTS (LIVE)
+================================ */
+onValue(ref(db, "contestants"), snap => {
+
+  const data = snap.val();
+  contestantsEl.innerHTML = "";
+
+  if (!data) return;
+
+  Object.entries(data)
+    .sort((a, b) => (b[1].votes || 0) - (a[1].votes || 0))
+    .forEach(([id, c]) => {
+
+      const el = document.createElement("div");
+      el.className = "card";
+
+      el.innerHTML = `
+        <p><b>ID:</b> ${id}</p>
+        <p><b>Votes:</b> ${c.votes || 0}</p>
+
+        <input type="number" id="add-${id}" placeholder="Add votes" />
+
+        <button onclick="addVotes('${id}')">➕ Add Votes</button>
+      `;
+
+      contestantsEl.appendChild(el);
+    });
+
+});
+
+/* ===============================
+   ➕ MANUAL ADD VOTES
+================================ */
+window.addVotes = async (contestantId) => {
+
+  const qty = Number(
+    document.getElementById(`add-${contestantId}`).value
+  );
+
+  if (!qty || qty <= 0) {
+    alert("Enter valid votes");
+    return;
+  }
+
+  const res = await fetch("/api/add-votes", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      contestantId,
+      votes: qty
+    })
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    alert("✅ Votes added");
+  } else {
+    alert("❌ Failed");
+  }
+};
+
+/* ===============================
+   💳 MANUAL PAYMENTS
+================================ */
 onValue(ref(db, "manual_payments"), snap => {
 
   const data = snap.val();
-  list.innerHTML = "";
+  paymentsEl.innerHTML = "";
 
-  if (!data) {
-    list.innerHTML = "<p>No manual payments</p>";
-    return;
-  }
+  if (!data) return;
 
   Object.entries(data).reverse().forEach(([id, p]) => {
 
@@ -29,53 +104,18 @@ onValue(ref(db, "manual_payments"), snap => {
       <p><b>Name:</b> ${p.payer}</p>
       <p><b>Reference:</b> ${p.reference}</p>
 
-      <button class="approve" onclick="approve('${id}')">Approve</button>
-      <button class="reject" onclick="reject('${id}')">Reject</button>
+      <button onclick="approve('${id}')">✅ Approve</button>
+      <button onclick="reject('${id}')">❌ Reject</button>
     `;
 
-    list.appendChild(el);
+    paymentsEl.appendChild(el);
   });
 
 });
 
 /* ===============================
-   APPROVE
+   transactions (LIVE)
 ================================ */
-window.approve = async (id) => {
-
-  const res = await fetch("/api/approve-payment", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ id })
-  });
-
-  const data = await res.json();
-
-  if (data.success) {
-    alert("✅ Payment approved & votes added");
-  } else {
-    alert("❌ Failed");
-  }
-};
-
-/* ===============================
-   REJECT
-================================ */
-window.reject = async (id) => {
-
-  await fetch("/api/reject-payment", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ id })
-  });
-
-  alert("❌ Payment rejected");
-};
-
 onValue(ref(db, "transactions"), snap => {
 
   const data = snap.val();
@@ -84,7 +124,9 @@ onValue(ref(db, "transactions"), snap => {
 
 });
 
-
+/* ===============================
+   Transactions (LIVE)
+================================ */
 const txEl = document.getElementById("transactions");
 
 onValue(ref(db, "transactions"), snap => {
@@ -109,3 +151,38 @@ onValue(ref(db, "transactions"), snap => {
   });
 
 });
+/* ===============================
+   APPROVE
+================================ */
+window.approve = async (id) => {
+
+  const res = await fetch("/api/approve-payment", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ id })
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    alert("✅ Approved & votes added");
+  }
+};
+
+/* ===============================
+   REJECT
+================================ */
+window.reject = async (id) => {
+
+  await fetch("/api/reject-payment", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ id })
+  });
+
+  alert("❌ Rejected");
+};
