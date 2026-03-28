@@ -98,3 +98,7 @@ await fetch("/api/manual-add-votes", {
     adminKey:"SECRET"
   })
 });
+
+await db
+  .ref(`contestants/${contestantId}/votes`)
+  .transaction(v => (v || 0) + votes);

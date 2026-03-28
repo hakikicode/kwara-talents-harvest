@@ -65,8 +65,10 @@ export default async function handler(req, res) {
     }
 
     res.json({
-      authorization_url: data.data.authorization_url
-    });
+    reference,
+    amount,
+    publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY  
+  });
 
   } catch (err) {
     console.error(err);

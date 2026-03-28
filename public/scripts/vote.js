@@ -261,52 +261,51 @@ window.startVote = async contestantId => {
   if (!email) return;
 
   const qty =
-    Number(
-      document.getElementById(`qty-${contestantId}`).value
-    ) || 1;
-
-  // anti spam
-  const lastVote = localStorage.getItem("last_vote_time");
-  const now = Date.now();
-
-  if (lastVote && now - lastVote < 15000) {
-    alert("Please wait before voting again.");
-    return;
-  }
-
-  localStorage.setItem("last_vote_time", now);
+    Number(document.getElementById(`qty-${contestantId}`).value) || 1;
 
   try {
 
     const res = await fetch("/api/initialize-payment", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({
         email,
         contestantId,
-        votes: qty,
-        deviceId: getDeviceId()
+        votes: qty
       })
     });
 
     const data = await res.json();
 
-    if (!data.authorization_url) {
-
-      const manual = confirm(
-        "Payment failed.\nPay manually?"
-      );
-
-      if (manual) {
-        window.location.href =
-          `/manual-payment.html?contestantId=${contestantId}&votes=${qty}`;
-      }
-
+    if (!data.reference) {
+      alert("Payment initialization failed");
       return;
     }
 
-    window.location.href =
-      data.authorization_url;
+    // ✅ POPUP PAYMENT
+    const handler = PaystackPop.setup({
+      key: data.publicKey, // send this from backend
+      email,
+      amount: data.amount,
+      ref: data.reference,
+
+      callback: function (response) {
+
+        // ✅ SUCCESS
+        alert("✅ Payment successful!");
+
+        // 🔥 Force instant UI update (no reload needed)
+        refreshVotesInstant(contestantId, qty);
+      },
+
+      onClose: function () {
+        console.log("Payment window closed");
+      }
+    });
+
+    handler.openIframe();
 
   } catch (err) {
     console.error(err);
@@ -328,6 +327,12 @@ window.copyLink = link => {
 (async () => {
   await loadContestants();
   startLiveVotes();
+
+  const params = new URLSearchParams(location.search);
+
+  if (params.get("success")) {
+    alert("✅ Payment successful!");
+  }
 })();
 
 /* ===============================
@@ -355,3 +360,24 @@ setInterval(() => {
   const fakeVotes = Math.floor(Math.random() * 5) + 1;
   showVotePop(fakeVotes);
 }, 15000);
+
+
+function refreshVotesInstant(contestantId, qty) {
+
+  const percentEl = document.getElementById(`percent-${contestantId}`);
+  const bar = document.getElementById(`bar-${contestantId}`);
+
+  if (!percentEl || !bar) return;
+
+  // fake increase instantly
+  const currentPercent = parseFloat(percentEl.textContent) || 0;
+
+  const addedPercent = (qty / MAX_VOTES_TARGET) * 100;
+
+  const newPercent = Math.min(currentPercent + addedPercent, 100);
+
+  percentEl.textContent = newPercent.toFixed(1) + "%";
+  bar.style.width = newPercent + "%";
+
+  showVotePop(qty);
+}
