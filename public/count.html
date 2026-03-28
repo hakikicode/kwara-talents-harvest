@@ -1,61 +1,49 @@
-<h1>📊 Admin Dashboard</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin – Vote Control</title>
+  <meta name="viewport" content="width=device-width">
 
-<p>Total Revenue: ₦<span id="revenue">0</span></p>
-<p>Total Votes: <span id="votes">0</span></p>
+  <style>
+    body {
+      font-family: Arial;
+      background: #0b0f1a;
+      color: #fff;
+      padding: 20px;
+    }
 
-<div id="top"></div>
+    h1 {
+      margin-bottom: 20px;
+    }
 
-<script type="module">
-import { db } from "./firebase/setup.js";
-import { ref, onValue } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
+    .card {
+      background: #020617;
+      border: 1px solid #1f2937;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 10px;
+    }
 
-const revenueEl = document.getElementById("revenue");
-const votesEl = document.getElementById("votes");
-const topEl = document.getElementById("top");
+    button {
+      padding: 8px 12px;
+      margin-right: 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
 
-// 🔥 TOTAL REVENUE
-onValue(ref(db, "transactions"), snap => {
-  const data = snap.val() || {};
+    .approve { background: #22c55e; }
+    .reject { background: #ef4444; }
+  </style>
+</head>
+<body>
 
-  let total = 0;
+<h1>🛠 Admin Panel – Manual Payments</h1>
 
-  Object.values(data).forEach(t => {
-    total += t.amount || 0;
-  });
+<div id="list"></div>
 
-  revenueEl.textContent = total.toLocaleString();
-});
+<script type="module" src="scripts/count.js"></script>
 
-// 🔥 TOTAL VOTES + TOP USERS
-onValue(ref(db, "contestants"), snap => {
-  const data = snap.val() || {};
-
-  let totalVotes = 0;
-
-  const arr = Object.entries(data).map(([id, c]) => {
-    totalVotes += c.votes || 0;
-    return { id, votes: c.votes || 0 };
-  });
-
-  votesEl.textContent = totalVotes;
-
-  arr.sort((a,b)=>b.votes-a.votes);
-
-  topEl.innerHTML = arr.slice(0,5).map(c =>
-    `<p>${c.id} — ${c.votes} votes</p>`
-  ).join("");
-});
-await runTransaction(
-  ref(db, `contestants/${id}/votes`),
-  v => (v || 0) + 50
-);
-await fetch("/api/manual-add-votes", {
-  method:"POST",
-  headers:{ "Content-Type":"application/json" },
-  body: JSON.stringify({
-    contestantId:"john_doe",
-    votes:20,
-    adminKey:"SECRET"
-  })
-});
-</script>
+</body>
+</html>
