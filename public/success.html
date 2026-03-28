@@ -1,20 +1,22 @@
-<script type="module">
-import { db } from "./firebase/setup.js";
-import { ref, runTransaction } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
-
+<script>
 const params = new URLSearchParams(location.search);
+const reference = params.get("reference");
 
-const contestantId = params.get("contestantId");
-const votes = Number(params.get("votes") || 1);
+if (reference) {
 
-if (contestantId) {
+  fetch("/api/verify-payment", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ reference })
+  })
+  .then(() => {
+    alert("✅ Payment successful! Votes added.");
+    window.location.href = "/vote.html";
+  })
+  .catch(() => {
+    alert("Payment received. Processing...");
+    window.location.href = "/vote.html";
+  });
 
-  await runTransaction(
-    ref(db, `contestants/${contestantId}/votes`),
-    v => (v || 0) + votes
-  );
-
-  alert("✅ Payment successful! Votes added.");
-  window.location.href = "/vote.html";
 }
 </script>
