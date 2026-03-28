@@ -9,6 +9,7 @@ export default async function handler(req, res) {
   }
 
   const amount = Number(votes) * 350 * 100; // kobo
+
   const reference = `KTH-${Date.now()}-${contestantId}`;
 
   try {
@@ -24,7 +25,7 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           email,
           amount,
-          reference, // ✅ FIXED (IMPORTANT)
+          reference,
 
           callback_url: `${process.env.BASE_URL}/vote.html?success=true`,
 
@@ -34,29 +35,14 @@ export default async function handler(req, res) {
           },
 
           // ✅ FIXED SPLIT
-          split: {
-            type: "flat",
-            currency: "NGN",
-            bearer: "account", // ✅ REQUIRED
-            subaccounts: [
-              {
-                subaccount: process.env.ECOBANK_SUBACCOUNT,
-                share: 27500 * votes
-              },
-              {
-                subaccount: process.env.ACCESSBANK_SUBACCOUNT,
-                share: 7500 * votes
-              }
-            ]
-          }
+          subaccount: process.env.ECOBANK_SUBACCOUNT,
+          transaction_charge: 27500 * votes,
+          bearer: "account"
         })
       }
     );
 
     const data = await response.json();
-
-    // ✅ DEBUG (VERY IMPORTANT)
-    console.log("PAYSTACK RESPONSE:", data);
 
     if (!data.status) {
       console.error("PAYSTACK ERROR:", data);
@@ -72,7 +58,7 @@ export default async function handler(req, res) {
     });
 
   } catch (err) {
-    console.error("🔥 INIT ERROR:", err);
+    console.error("INIT ERROR:", err);
     res.status(500).json({ error: "Payment init failed" });
   }
 }
