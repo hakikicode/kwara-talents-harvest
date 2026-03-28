@@ -89,6 +89,10 @@ async function loadContestants() {
            href="https://wa.me/?text=Vote for contestant ${id} ${link}">
            WhatsApp
           </a>
+          <a target="_blank"
+            href="https://www.facebook.com/sharer/sharer.php?u=${link}">
+            Facebook
+          </a>
         </div>
       `;
 

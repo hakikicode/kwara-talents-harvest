@@ -1,33 +1,22 @@
+import { db } from "../firebase/admin.js";
+
 export default async function handler(req, res) {
 
-  // ✅ CORS FIX
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  const response = await fetch(
+    "https://api.github.com/repos/hakikicode/kwara-talents-harvest/contents/public/contestants"
+  );
 
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
+  const files = await response.json();
 
-  try {
+  const contestants = files
+    .filter(file => file.name.match(/\.(jpg|jpeg|png|webp)$/i))
+    .map(file => {
 
-    const response = await fetch(
-      "https://api.github.com/repos/hakikicode/kwara-talents-harvest/contents/public/contestants"
-    );
-
-    const files = await response.json();
-
-    const contestants = files
-      .filter(file =>
-        file.name.match(/\.(jpg|jpeg|png|webp)$/i)
-      )
-      .map(file => {
-
-        const id = file.name
-          .replace(/\.[^/.]+$/, "")   // remove extension (.jpg)
-          .replace(/\s+/g, "_")       // spaces → _
-          .replace(/[.#$\[\]]/g, "")  // remove invalid Firebase chars
-          .toLowerCase();
+      const id = file.name
+        .replace(/\.[^/.]+$/, "")
+        .replace(/\s+/g, "_")
+        .replace(/[.#$\[\]]/g, "")
+        .toLowerCase();
 
       return {
         id,
@@ -35,11 +24,20 @@ export default async function handler(req, res) {
       };
     });
 
-    res.status(200).json(contestants);
+  // 🔥 AUTO SYNC TO FIREBASE
+  for (const c of contestants) {
 
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to load contestants" });
+    const ref = db.ref(`contestants/${c.id}`);
+    const snap = await ref.get();
+
+    if (!snap.exists()) {
+      await ref.set({
+        image: c.image,
+        votes: 0,
+        created_at: Date.now()
+      });
+    }
   }
-}
 
+  res.json(contestants);
+}
