@@ -277,7 +277,7 @@ window.startVote = async contestantId => {
       })
     });
 
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
 
     if (!data.reference) {
       alert("Payment initialization failed");
@@ -294,10 +294,14 @@ window.startVote = async contestantId => {
       callback: function (response) {
 
         // ✅ SUCCESS
-        alert("✅ Payment successful!");
+        alert("✅ Payment successful! Updating votes...");
 
-        // 🔥 Force instant UI update (no reload needed)
-        refreshVotesInstant(contestantId, qty);
+        refreshVotesInstant(contestantId, qty); // ✅ instant refresh for better UX
+
+        // 🔥 WAIT for webhook to update DB
+        setTimeout(() => {
+            location.reload(); // safest sync with Firebase
+        }, 3000);
       },
 
       onClose: function () {
