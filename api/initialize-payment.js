@@ -26,6 +26,8 @@ export default async function handler(req, res) {
           email,
           amount,
           reference,
+          contestantId,   // must match Firebase key
+          votes: qty,
 
           callback_url: `${process.env.BASE_URL}/vote.html?success=true`,
 

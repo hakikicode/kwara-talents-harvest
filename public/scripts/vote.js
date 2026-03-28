@@ -22,6 +22,26 @@ function safeId(id) {
     .replace(/[.#$\[\]]/g, "");
 }
 
+async function waitForVoteUpdate(contestantId, expectedVotes, timeout = 10000) {
+  const start = Date.now();
+
+  return new Promise((resolve, reject) => {
+    const interval = setInterval(async () => {
+      const snap = await get(ref(db, `contestants/${contestantId}/votes`));
+      const currentVotes = snap.val() || 0;
+
+      if (currentVotes >= expectedVotes) {
+        clearInterval(interval);
+        resolve(currentVotes);
+      }
+
+      if (Date.now() - start > timeout) {
+        clearInterval(interval);
+        reject("Vote update timeout");
+      }
+    }, 500);
+  });
+}
 /* ===============================
    LOAD CONTESTANTS
 ================================ */
@@ -253,7 +273,7 @@ function getDeviceId() {
 }
 
 /* ===============================
-   START VOTE
+   START VOTE (UPDATED)
 ================================ */
 window.startVote = async contestantId => {
 
@@ -265,16 +285,11 @@ window.startVote = async contestantId => {
 
   try {
 
+    // 1️⃣ Initialize payment on backend
     const res = await fetch("/api/initialize-payment", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        email,
-        contestantId,
-        votes: qty
-      })
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, contestantId, votes: qty })
     });
 
     const data = await res.json().catch(() => ({}));
@@ -284,24 +299,41 @@ window.startVote = async contestantId => {
       return;
     }
 
-    // ✅ POPUP PAYMENT
+    // 2️⃣ Instant UX feedback (popup only, not actual vote)
+    showVotePop(qty);
+
+    // 3️⃣ Setup Paystack inline payment
     const handler = PaystackPop.setup({
-      key: data.publicKey, // send this from backend
+      key: data.publicKey, 
       email,
       amount: data.amount,
       ref: data.reference,
 
-      callback: function (response) {
+      callback: async function(response) {
 
-        // ✅ SUCCESS
-        alert("✅ Payment successful! Updating votes...");
+        alert("✅ Payment successful! Waiting for vote to update...");
 
-        refreshVotesInstant(contestantId, qty); // ✅ instant refresh for better UX
+        // 4️⃣ Wait for webhook to increment votes in Firebase
+        try {
+          const newVotes = await waitForVoteUpdate(contestantId, 
+            (lastVotesSnapshot[contestantId] || 0) + qty
+          );
 
-        // 🔥 WAIT for webhook to update DB
-        setTimeout(() => {
-            location.reload(); // safest sync with Firebase
-        }, 3000);
+          // ✅ Update UI bars & percentage
+          const percentEl = document.getElementById(`percent-${contestantId}`);
+          const bar = document.getElementById(`bar-${contestantId}`);
+
+          if (percentEl && bar) {
+            const percent = Math.min((newVotes / MAX_VOTES_TARGET) * 100, 100);
+            percentEl.textContent = percent.toFixed(1) + "%";
+            bar.style.width = percent + "%";
+          }
+
+          console.log("✅ Votes synced with Firebase:", newVotes);
+
+        } catch (err) {
+          console.warn("⚠️ Vote update timeout, reload may be needed", err);
+        }
       },
 
       onClose: function () {
@@ -316,6 +348,35 @@ window.startVote = async contestantId => {
     alert("Payment failed");
   }
 };
+
+/* ===============================
+   WAIT FOR FIREBASE UPDATE
+================================ */
+async function waitForVoteUpdate(contestantId, expectedVotes, timeout = 10000) {
+  const start = Date.now();
+
+  return new Promise((resolve, reject) => {
+    const interval = setInterval(async () => {
+      try {
+        const snap = await get(ref(db, `contestants/${contestantId}/votes`));
+        const currentVotes = snap.val() || 0;
+
+        if (currentVotes >= expectedVotes) {
+          clearInterval(interval);
+          resolve(currentVotes);
+        }
+
+        if (Date.now() - start > timeout) {
+          clearInterval(interval);
+          reject("Vote update timeout");
+        }
+      } catch (err) {
+        clearInterval(interval);
+        reject(err);
+      }
+    }, 500);
+  });
+}
 
 /* ===============================
    COPY LINK
