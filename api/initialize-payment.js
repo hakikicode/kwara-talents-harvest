@@ -9,7 +9,6 @@ export default async function handler(req, res) {
   }
 
   const amount = Number(votes) * 350 * 100; // kobo
-
   const reference = `KTH-${Date.now()}-${contestantId}`;
 
   try {
@@ -23,10 +22,9 @@ export default async function handler(req, res) {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          email, // ✅ REQUIRED
+          email,
           amount,
-          contestantId,
-          votes: qty,
+          reference, // ✅ FIXED (IMPORTANT)
 
           callback_url: `${process.env.BASE_URL}/vote.html?success=true`,
 
@@ -35,27 +33,30 @@ export default async function handler(req, res) {
             votes
           },
 
-          // ✅ SPLIT PAYMENT (REAL FIX)
+          // ✅ FIXED SPLIT
           split: {
             type: "flat",
             currency: "NGN",
+            bearer: "account", // ✅ REQUIRED
             subaccounts: [
               {
                 subaccount: process.env.ECOBANK_SUBACCOUNT,
-                share: 27500 * votes // ₦275
+                share: 27500 * votes
               },
               {
                 subaccount: process.env.ACCESSBANK_SUBACCOUNT,
-                share: 7500 * votes // ₦75
+                share: 7500 * votes
               }
             ]
           }
         })
       }
     );
-    
 
     const data = await response.json();
+
+    // ✅ DEBUG (VERY IMPORTANT)
+    console.log("PAYSTACK RESPONSE:", data);
 
     if (!data.status) {
       console.error("PAYSTACK ERROR:", data);
@@ -65,13 +66,13 @@ export default async function handler(req, res) {
     }
 
     res.json({
-    reference,
-    amount,
-    publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY  
-  });
+      reference,
+      amount,
+      publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY
+    });
 
   } catch (err) {
-    console.error(err);
+    console.error("🔥 INIT ERROR:", err);
     res.status(500).json({ error: "Payment init failed" });
   }
 }
