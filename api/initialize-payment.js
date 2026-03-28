@@ -25,6 +25,8 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           email, // ✅ REQUIRED
           amount,
+          contestantId,
+          votes: qty,
 
           callback_url: `${process.env.BASE_URL}/vote.html?success=true`,
 
