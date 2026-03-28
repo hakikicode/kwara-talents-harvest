@@ -1,31 +1,150 @@
 import { db } from "../firebase/setup.js";
-import { ref, onValue } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
+import {
+  ref,
+  onValue
+} from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 
-const stats = document.getElementById("stats");
+const contestantsEl = document.getElementById("contestants");
+const paymentsEl = document.getElementById("payments");
 
+/* ===============================
+   🔐 BASIC PROTECTION
+================================ */
+const password = prompt("Enter admin password");
+if (password !== "admin123") {
+  document.body.innerHTML = "<h2>Access denied</h2>";
+  throw new Error("Unauthorized");
+}
+
+/* ===============================
+   🏆 LOAD CONTESTANTS (LIVE)
+================================ */
 onValue(ref(db, "contestants"), snap => {
 
   const data = snap.val();
+  contestantsEl.innerHTML = "";
+
   if (!data) return;
-
-  let totalVotes = 0;
-
-  let html = "<h3>Leaderboard</h3>";
 
   Object.entries(data)
     .sort((a, b) => (b[1].votes || 0) - (a[1].votes || 0))
-    .forEach(([id, c], index) => {
+    .forEach(([id, c]) => {
 
-      totalVotes += c.votes || 0;
+      const el = document.createElement("div");
+      el.className = "card";
 
-      html += `
-        <p>
-          ${index + 1}. ${id} — 🔥 ${c.votes || 0}
-        </p>
+      el.innerHTML = `
+        <p><b>ID:</b> ${id}</p>
+        <p><b>Votes:</b> ${c.votes || 0}</p>
+
+        <input type="number" id="add-${id}" placeholder="Add votes" />
+
+        <button onclick="addVotes('${id}')">➕ Add Votes</button>
       `;
+
+      contestantsEl.appendChild(el);
     });
 
-  html += `<hr><h3>Total Votes: ${totalVotes}</h3>`;
-
-  stats.innerHTML = html;
 });
+
+/* ===============================
+   ➕ MANUAL ADD VOTES
+================================ */
+window.addVotes = async (contestantId) => {
+
+  const qty = Number(
+    document.getElementById(`add-${contestantId}`).value
+  );
+
+  if (!qty || qty <= 0) {
+    alert("Enter valid votes");
+    return;
+  }
+
+  const res = await fetch("/api/add-votes", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      contestantId,
+      votes: qty
+    })
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    alert("✅ Votes added");
+  } else {
+    alert("❌ Failed");
+  }
+};
+
+/* ===============================
+   💳 MANUAL PAYMENTS
+================================ */
+onValue(ref(db, "manual_payments"), snap => {
+
+  const data = snap.val();
+  paymentsEl.innerHTML = "";
+
+  if (!data) return;
+
+  Object.entries(data).reverse().forEach(([id, p]) => {
+
+    if (p.status !== "pending") return;
+
+    const el = document.createElement("div");
+    el.className = "card";
+
+    el.innerHTML = `
+      <p><b>Contestant:</b> ${p.contestantId}</p>
+      <p><b>Votes:</b> ${p.votes}</p>
+      <p><b>Name:</b> ${p.payer}</p>
+      <p><b>Reference:</b> ${p.reference}</p>
+
+      <button onclick="approve('${id}')">✅ Approve</button>
+      <button onclick="reject('${id}')">❌ Reject</button>
+    `;
+
+    paymentsEl.appendChild(el);
+  });
+
+});
+
+/* ===============================
+   APPROVE
+================================ */
+window.approve = async (id) => {
+
+  const res = await fetch("/api/approve-payment", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ id })
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    alert("✅ Approved & votes added");
+  }
+};
+
+/* ===============================
+   REJECT
+================================ */
+window.reject = async (id) => {
+
+  await fetch("/api/reject-payment", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ id })
+  });
+
+  alert("❌ Rejected");
+};

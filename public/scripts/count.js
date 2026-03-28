@@ -75,3 +75,11 @@ window.reject = async (id) => {
 
   alert("❌ Payment rejected");
 };
+
+onValue(ref(db, "transactions"), snap => {
+
+  const data = snap.val();
+
+  console.log("💰 Paystack Payments:", data);
+
+});
