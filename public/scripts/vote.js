@@ -1,4 +1,4 @@
-const MAX_VOTES_TARGET = 300;
+const MAX_VOTES_TARGET = 200;
 
 import { db } from "../firebase/setup.js";
 import {
@@ -33,6 +33,12 @@ async function loadContestants() {
       "https://www.kwaratalentsharvest.com.ng/api/contestants"
     );
 
+    if (!res.ok) {
+      const text = await res.text();
+      console.error("API ERROR:", text);
+      throw new Error("Failed to load contestants");
+    }
+
     const contestants = await res.json();
 
     list.innerHTML = "";
@@ -41,7 +47,7 @@ async function loadContestants() {
 
       const id = safeId(c.id);
 
-      // ✅ Ensure exists in Firebase
+      // ✅ Ensure exists in Firebase (ONLY ONCE PER CONTESTANT)
       const dbRef = ref(db, `contestants/${id}`);
       const snap = await get(dbRef);
 
@@ -53,8 +59,7 @@ async function loadContestants() {
         });
       }
 
-      const link =
-        `${location.origin}/contestant.html?id=${id}`;
+      const link = `${location.origin}/contestant.html?id=${id}`;
 
       const card = document.createElement("div");
       card.className = "vote-card";
@@ -65,7 +70,7 @@ async function loadContestants() {
           loading="lazy"
           onerror="this.src='assets/default.png'">
 
-          <p class="votes" id="percent-${id}">0%</p>
+        <p class="votes" id="percent-${id}">0%</p>
 
         <div class="progress">
           <div class="bar" id="bar-${id}"></div>
@@ -89,6 +94,7 @@ async function loadContestants() {
            href="https://wa.me/?text=Vote for contestant ${id} ${link}">
            WhatsApp
           </a>
+
           <a target="_blank"
             href="https://www.facebook.com/sharer/sharer.php?u=${link}">
             Facebook
@@ -105,7 +111,7 @@ async function loadContestants() {
     }
 
   } catch (err) {
-    console.error("Failed loading contestants:", err);
+    console.error("❌ Failed loading contestants:", err);
   }
 }
 
