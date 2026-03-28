@@ -3,79 +3,92 @@ import { db } from "../firebase/admin.js";
 
 export const config = {
   api: {
-    bodyParser: false // ✅ REQUIRED FOR PAYSTACK
-  }
+    bodyParser: false, // ✅ REQUIRED
+  },
 };
 
+// ✅ get raw body EXACTLY
 async function getRawBody(req) {
-  const buffers = [];
+  const chunks = [];
 
   for await (const chunk of req) {
-    buffers.push(chunk);
+    chunks.push(chunk);
   }
 
-  return Buffer.concat(buffers);
+  return Buffer.concat(chunks);
 }
 
 export default async function handler(req, res) {
-
-  const rawBody = await getRawBody(req);
-
-  const hash = crypto
-    .createHmac("sha512", process.env.PAYSTACK_SECRET_KEY)
-    .update(rawBody)
-    .digest("hex");
-
-  const signature = req.headers["x-paystack-signature"];
-
-  if (hash !== signature) {
-    console.log("❌ Invalid signature");
-    return res.status(401).end();
-  }
-
-  const event = JSON.parse(rawBody.toString());
-
-  if (event.event !== "charge.success")
-    return res.sendStatus(200);
-
-  const data = event.data;
-
-  const reference = data.reference;
-  const contestantId =
-  data.metadata?.contestantId
-    ?.replace(/\.[^/.]+$/, "")
-    ?.replace(/[.#$\[\]]/g, "");
-  const votes = Number(data.metadata?.votes || 1);
-
-  if (!reference || !contestantId)
-    return res.sendStatus(200);
-
   try {
+    const rawBody = await getRawBody(req);
 
-    const logRef = db.ref(`transactions/${reference}`);
-    const exists = await logRef.get();
+    const signature = req.headers["x-paystack-signature"];
 
-    if (exists.exists()) {
-      console.log("Duplicate payment");
+    const hash = crypto
+      .createHmac("sha512", process.env.PAYSTACK_SECRET_KEY)
+      .update(rawBody)
+      .digest("hex");
+
+    // ❌ STOP if invalid
+    if (hash !== signature) {
+      console.log("❌ Invalid signature");
+      return res.sendStatus(401);
+    }
+
+    const event = JSON.parse(rawBody.toString());
+
+    if (event.event !== "charge.success") {
       return res.sendStatus(200);
     }
 
+    const data = event.data;
+
+    const reference = data.reference;
+
+    const contestantId = data.metadata?.contestantId
+      ?.replace(/\.[^/.]+$/, "")
+      ?.replace(/[.#$\[\]]/g, "");
+
+    const votes = Number(data.metadata?.votes || 1);
+
+    if (!reference || !contestantId) {
+      console.log("❌ Missing metadata");
+      return res.sendStatus(200);
+    }
+
+    // =========================
+    // 🔥 CRITICAL FIX HERE
+    // =========================
+
+    const logRef = db.ref(`transactions/${reference}`);
+    const snapshot = await logRef.get();
+
+    // ✅ prevent duplicates
+    if (snapshot.exists()) {
+      console.log("⚠️ Duplicate payment ignored");
+      return res.sendStatus(200);
+    }
+
+    // ✅ SAVE TRANSACTION FIRST
     await logRef.set({
       contestantId,
       votes,
-      status: "success",
-      created_at: Date.now()
+      created_at: Date.now(),
     });
 
-    await db
-      .ref(`contestants/${contestantId}/votes`)
-      .transaction(v => (v || 0) + votes);
+    // ✅ FORCE UPDATE (NOT ONLY TRANSACTION)
+    const voteRef = db.ref(`contestants/${contestantId}/votes`);
+
+    await voteRef.transaction((current) => {
+      return (typeof current === "number" ? current : 0) + votes;
+    });
 
     console.log("✅ Votes added:", votes);
 
-  } catch (err) {
-    console.error(err);
-  }
+    return res.sendStatus(200);
 
-  res.sendStatus(200);
+  } catch (err) {
+    console.error("🔥 Webhook error:", err);
+    return res.sendStatus(500);
+  }
 }
