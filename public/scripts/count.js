@@ -83,3 +83,29 @@ onValue(ref(db, "transactions"), snap => {
   console.log("💰 Paystack Payments:", data);
 
 });
+
+
+const txEl = document.getElementById("transactions");
+
+onValue(ref(db, "transactions"), snap => {
+
+  const data = snap.val();
+  txEl.innerHTML = "";
+
+  if (!data) return;
+
+  Object.entries(data).reverse().forEach(([refId, t]) => {
+
+    const el = document.createElement("div");
+    el.className = "card";
+
+    el.innerHTML = `
+      <p><b>Ref:</b> ${refId}</p>
+      <p><b>Contestant:</b> ${t.contestantId}</p>
+      <p><b>Votes:</b> ${t.votes}</p>
+    `;
+
+    txEl.appendChild(el);
+  });
+
+});
