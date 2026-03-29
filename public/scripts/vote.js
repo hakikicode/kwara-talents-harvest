@@ -288,32 +288,6 @@ window.startVote = async contestantId => {
       amount: data.amount,
       ref: data.reference,
 
-      callback: async function(response) {
-
-        alert("✅ Payment successful! Waiting for vote to update...");
-
-        // 4️⃣ Wait for webhook to increment votes in Firebase
-        try {
-          const newVotes = await waitForVoteUpdate(contestantId, 
-            (lastVotesSnapshot[contestantId] || 0) + qty
-          );
-
-          // ✅ Update UI bars & percentage
-          const percentEl = document.getElementById(`percent-${contestantId}`);
-          const bar = document.getElementById(`bar-${contestantId}`);
-
-          if (percentEl && bar) {
-            const percent = Math.min((newVotes / MAX_VOTES_TARGET) * 100, 100);
-            percentEl.textContent = percent.toFixed(1) + "%";
-            bar.style.width = percent + "%";
-          }
-
-          console.log("✅ Votes synced with Firebase:", newVotes);
-
-        } catch (err) {
-          console.warn("⚠️ Vote update timeout, reload may be needed", err);
-        }
-      },
       callback: async function (response) {
 
         alert("✅ Payment successful! Verifying...");
@@ -367,31 +341,6 @@ window.startVote = async contestantId => {
 /* ===============================
    WAIT FOR FIREBASE UPDATE
 ================================ */
-async function waitForVoteUpdate(contestantId, expectedVotes, timeout = 10000) {
-  const start = Date.now();
-
-  return new Promise((resolve, reject) => {
-    const interval = setInterval(async () => {
-      try {
-        const snap = await get(ref(db, `contestants/${contestantId}/votes`));
-        const currentVotes = snap.val() || 0;
-
-        if (currentVotes >= expectedVotes) {
-          clearInterval(interval);
-          resolve(currentVotes);
-        }
-
-        if (Date.now() - start > timeout) {
-          clearInterval(interval);
-          reject("Vote update timeout");
-        }
-      } catch (err) {
-        clearInterval(interval);
-        reject(err);
-      }
-    }, 500);
-  });
-}
 
 /* ===============================
    COPY LINK
