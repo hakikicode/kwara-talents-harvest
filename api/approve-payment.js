@@ -19,7 +19,8 @@ export default async function handler(req, res) {
 
     const data = snap.val();
 
-    if (data.status !== "pending") {
+    // ✅ prevent double approval
+    if (data.status === "approved") {
       return res.json({ success: true });
     }
 
@@ -36,7 +37,7 @@ export default async function handler(req, res) {
       approved_at: Date.now()
     });
 
-    return res.json({ success: true });
+    res.json({ success: true });
 
   } catch (err) {
     console.error(err);

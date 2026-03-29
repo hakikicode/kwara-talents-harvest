@@ -69,3 +69,9 @@ export default async function handler(req, res) {
     res.status(500).json({ error: "Verification failed" });
   }
 }
+
+const existing = await db.ref(`transactions/${reference}`).get();
+
+if (existing.exists()) {
+  return res.json({ success: true }); // prevent double credit
+}

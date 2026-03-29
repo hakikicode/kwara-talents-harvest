@@ -1,25 +1,63 @@
-<h2>Manual Payment</h2>
-<h3>⚠️ IMPORTANT</h3>
-<p>
-After payment, your votes will be verified within minutes.
-</p>
-<p>
-Bank: Ecobank<br>
-Account Name: Kwara Talent Harvest<br>
-Account Number: 4820114717
-</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Manual Payment</title>
 
-<p id="amount"></p>
+<style>
+body {
+  background:#0b0f1a;
+  color:#fff;
+  font-family:Arial;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
 
-<input id="payer" placeholder="Your Name">
-<input id="reference" placeholder="Transfer Reference">
+.card {
+  background:#020617;
+  padding:25px;
+  border-radius:12px;
+  width:320px;
+  border:1px solid #1f2937;
+}
 
-<button onclick="submitProof()">I Have Paid</button>
+input, button {
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  border-radius:8px;
+  border:none;
+}
+
+button {
+  background:#22c55e;
+  color:#fff;
+  cursor:pointer;
+}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h2>💳 Manual Payment</h2>
+
+  <p>Bank: Ecobank</p>
+  <p>Acct: 4820114717</p>
+
+  <input id="amount" placeholder="Amount" enabled="true">
+
+  <input id="payer" placeholder="Your Name">
+  <input id="reference" placeholder="Transaction Reference">
+
+  <input type="file" id="proof">
+
+  <button onclick="submitProof()">Submit Payment</button>
+</div>
 
 <script>
-
 const params = new URLSearchParams(location.search);
-
 const contestantId = params.get("contestantId");
 const votes = params.get("votes");
 
@@ -31,6 +69,7 @@ async function submitProof(){
   const payer = document.getElementById("payer").value;
   const reference = document.getElementById("reference").value;
 
+  // ⚠️ Simple version (no upload yet)
   await fetch("/api/manual-payment",{
     method:"POST",
     headers:{ "Content-Type":"application/json" },
@@ -38,11 +77,15 @@ async function submitProof(){
       contestantId,
       votes,
       payer,
-      reference
+      reference,
+      proof: "uploaded" // placeholder
     })
   });
 
-  alert("Payment submitted. Await confirmation.");
+  alert("✅ Submitted! Await admin approval.");
   location.href="/vote.html";
 }
 </script>
+
+</body>
+</html>

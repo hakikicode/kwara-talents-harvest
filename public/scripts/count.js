@@ -99,13 +99,15 @@ onValue(ref(db, "manual_payments"), snap => {
     el.className = "card";
 
     el.innerHTML = `
-      <p><b>Contestant:</b> ${p.contestantId}</p>
-      <p><b>Votes:</b> ${p.votes}</p>
-      <p><b>Name:</b> ${p.payer}</p>
-      <p><b>Reference:</b> ${p.reference}</p>
+        <p><b>Contestant:</b> ${p.contestantId}</p>
+        <p><b>Votes:</b> ${p.votes}</p>
+        <p><b>Name:</b> ${p.payer}</p>
+        <p><b>Ref:</b> ${p.reference}</p>
 
-      <button onclick="approve('${id}')">✅ Approve</button>
-      <button onclick="reject('${id}')">❌ Reject</button>
+        <p class="${p.status}">Status: ${p.status}</p>
+
+        <button onclick="approve('${id}')">✅ Approve</button>
+        <button onclick="reject('${id}')">❌ Reject</button>
     `;
 
     paymentsEl.appendChild(el);
@@ -142,9 +144,10 @@ onValue(ref(db, "transactions"), snap => {
     el.className = "card";
 
     el.innerHTML = `
-      <p><b>Ref:</b> ${refId}</p>
-      <p><b>Contestant:</b> ${t.contestantId}</p>
-      <p><b>Votes:</b> ${t.votes}</p>
+        <p><b>Ref:</b> ${refId}</p>
+        <p><b>Contestant:</b> ${t.contestantId}</p>
+        <p><b>Votes:</b> ${t.votes}</p>
+        <p style="color:#22c55e;">✔ Paid</p>
     `;
 
     txEl.appendChild(el);

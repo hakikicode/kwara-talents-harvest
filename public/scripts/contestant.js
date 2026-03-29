@@ -26,7 +26,7 @@ document.getElementById("profile").innerHTML = `
       <input type="number" id="count" min="1" value="1">
 
       <p class="price">
-        Total: ₦<span id="amount">400</span>
+        Total: ₦<span id="amount">350</span>
       </p>
 
       <button onclick="vote()">

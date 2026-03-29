@@ -7,34 +7,27 @@
 
   <style>
     body {
-      font-family: Arial;
-      background: #0b0f1a;
-      color: #fff;
-      padding: 20px;
-    }
+  background:#0b0f1a;
+  color:#fff;
+  font-family:Arial;
+}
 
-    h1 {
-      margin-bottom: 20px;
-    }
+.card {
+  background:#020617;
+  border:1px solid #1f2937;
+  padding:15px;
+  margin-bottom:12px;
+  border-radius:10px;
+  transition:0.2s;
+}
 
-    .card {
-      background: #020617;
-      border: 1px solid #1f2937;
-      padding: 15px;
-      margin-bottom: 15px;
-      border-radius: 10px;
-    }
+.card:hover {
+  transform:scale(1.02);
+}
 
-    button {
-      padding: 8px 12px;
-      margin-right: 10px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    .approve { background: #22c55e; }
-    .reject { background: #ef4444; }
+.approve { background:#22c55e; }
+.reject { background:#ef4444; }
+.pending { color:#facc15; }
   </style>
 </head>
 <body>
