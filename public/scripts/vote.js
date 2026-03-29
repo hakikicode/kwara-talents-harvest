@@ -18,7 +18,8 @@ const cardsMap = {};
 ================================ */
 function safeId(id) {
   return id
-    .replace(/\.[^/.]+$/, "")
+    .replace(/\.(jpg|jpeg|png|webp)$/i, "") // remove .jpg
+    .replace(/(jpg|jpeg|png|webp)$/i, "")   // remove jpg without dot
     .replace(/[.#$\[\]]/g, "");
 }
 /* ===============================

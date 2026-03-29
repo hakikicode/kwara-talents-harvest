@@ -2,7 +2,14 @@ import { db } from "../firebase/setup.js";
 import { ref, get } from
 "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 
-const id = new URLSearchParams(location.search).get("id");
+function cleanId(id) {
+  return id
+    .replace(/\.(jpg|jpeg|png|webp)$/i, "") // remove .jpg
+    .replace(/(jpg|jpeg|png|webp)$/i, "")   // remove jpg without dot
+    .replace(/[.#$\[\]]/g, "");
+}
+
+const id = cleanId(new URLSearchParams(location.search).get("id"));
 const link = location.href;
 
 // 🔥 1. Fetch FULL contestant data (API)
@@ -10,7 +17,7 @@ const apiRes = await fetch("/api/contestants");
 const allContestants = await apiRes.json();
 
 const apiData = allContestants.find(c => 
-  c.id.replace(/\.[^/.]+$/, "").replace(/[.#$\[\]]/g, "") === id
+  cleanId(c.id) === id
 );
 
 // 🔥 2. Fetch votes from Firebase
@@ -33,7 +40,7 @@ document.getElementById("profile").innerHTML = `
   <div class="profile-card">
     <img src="${c.image || 'assets/default.png'}">
 
-    <h1>${c.stage_name || id}</h1>
+    <h1>${c.stage_name || cleanId(id)}</h1>
     <p>${c.full_name || ""}</p>
     <p class="bio">${c.bio || "No bio provided"}</p>
 
@@ -128,24 +135,27 @@ window.vote = async () => {
 
         try {
           await fetch("/api/verify-payment", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            reference: response.reference
-          })
-        });
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              reference: response.reference
+            })
+          });
 
-          location.reload();
+        location.reload();
 
       } catch (err) {
         console.error(err);
         alert("Verification failed");
       }
 
-      })();
+    })();
+  },
 
-      }
-    });
+  onClose: function () {
+    console.log("Payment closed");
+  }
+});
 
     handler.openIframe();
 
