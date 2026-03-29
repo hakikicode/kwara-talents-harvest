@@ -82,10 +82,6 @@ async function loadContestants() {
           🗳 Vote Now — ₦${VOTE_PRICE}
         </button>
 
-        <button class="btn manual-btn"
-          onclick="goManual('${id}')">
-          💳 Manual Voting
-        </button>
 
         <div class="badge" id="badge-${id}"></div>
 

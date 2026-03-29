@@ -5,16 +5,36 @@ import { ref, get } from
 const id = new URLSearchParams(location.search).get("id");
 const link = location.href;
 
+// 🔥 1. Fetch FULL contestant data (API)
+const apiRes = await fetch("/api/contestants");
+const allContestants = await apiRes.json();
 
+const apiData = allContestants.find(c => 
+  c.id.replace(/\.[^/.]+$/, "").replace(/[.#$\[\]]/g, "") === id
+);
+
+// 🔥 2. Fetch votes from Firebase
 const snap = await get(ref(db, "contestants/" + id));
-const c = snap.val();
+const fbData = snap.val() || {};
+
+const c = {
+  ...apiData,
+  ...fbData
+};
+
+if (!c) {
+  document.getElementById("profile").innerHTML =
+    "<h2>Contestant not found</h2>";
+  throw new Error("Invalid contestant");
+}
+
 
 document.getElementById("profile").innerHTML = `
   <div class="profile-card">
     <img src="${c.image || 'assets/default.png'}">
 
-    <h1>${c.id}</h1>
-    <p>${c.id}</p>
+    <h1>${c.stage_name || id}</h1>
+    <p>${c.full_name || ""}</p>
     <p class="bio">${c.bio || "No bio provided"}</p>
 
     <div class="stats">
