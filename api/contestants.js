@@ -19,14 +19,13 @@ export default async function handler(req, res) {
 
     const contestants = files
       .filter(file =>
-        file.name.match(/\.(jpg|jpeg|png|webp)$/i) // remove .jpg
+        file.name.match(/\.(jpg|jpeg|png|webp)$/i)
       )
       .map(file => {
 
         const id = file.name
           .replace(/\.[^/.]+$/, "")   // remove extension (.jpg)
           .replace(/\s+/g, "_")       // spaces → _
-          .replace(/(jpg|jpeg|png|webp)$/i, "")   // remove jpg without dot
           .replace(/[.#$\[\]]/g, "")  // remove invalid Firebase chars
           .toLowerCase();
 
