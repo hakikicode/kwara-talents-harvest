@@ -66,12 +66,14 @@ window.copyLink = () => {
 };
 
 window.vote = async () => {
+
   const qty = Number(document.getElementById("count").value);
   const email = prompt("Enter your email:");
 
   if (!email) return;
 
   try {
+
     const res = await fetch("/api/initialize-payment", {
       method: "POST",
       headers: {
@@ -86,16 +88,37 @@ window.vote = async () => {
 
     const data = await res.json();
 
-    if (!data.authorization_url) {
-    alert("Payment initialization failed");
-    console.error(data);
-    return;
-  }
+    if (!data.reference) {
+      alert("Payment init failed");
+      return;
+    }
 
-  window.location.href = data.authorization_url;
+    const handler = PaystackPop.setup({
+      key: data.publicKey,
+      email,
+      amount: data.amount,
+      ref: data.reference,
+
+      callback: async function (response) {
+
+        alert("✅ Payment successful!");
+
+        await fetch("/api/verify-payment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            reference: response.reference
+          })
+        });
+
+        location.reload();
+      }
+    });
+
+    handler.openIframe();
 
   } catch (err) {
-    alert("Payment failed");
     console.error(err);
+    alert("Payment failed");
   }
 };

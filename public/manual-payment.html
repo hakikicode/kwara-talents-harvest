@@ -40,36 +40,42 @@ button {
 </head>
 <body>
 
-<div class="card">
+<div class="manual-container">
+
   <h2>💳 Manual Payment</h2>
 
-  <p>Bank: Ecobank</p>
-  <p>Acct: 4820114717</p>
+  <div class="notice">
+    ⚠️ After payment, upload proof. Votes will be verified within minutes.
+  </div>
 
-  <input id="amount" placeholder="Amount" enabled="true">
+  <div class="bank-box">
+    <p><b>Bank:</b> Ecobank</p>
+    <p><b>Account Name:</b> Kwara Talent Harvest</p>
+    <p><b>Account Number:</b> 4820114717</p>
+  </div>
 
-  <input id="payer" placeholder="Your Name">
-  <input id="reference" placeholder="Transaction Reference">
+  <h3 id="amount"></h3>
 
-  <input type="file" id="proof">
+  <input id="payer" placeholder="Your Name" />
+  <input id="reference" placeholder="Transfer Reference" />
 
-  <button onclick="submitProof()">Submit Payment</button>
+  <input type="file" id="proof" />
+
+  <button onclick="submitProof()">Upload Proof</button>
+
 </div>
 
 <script>
-const params = new URLSearchParams(location.search);
-const contestantId = params.get("contestantId");
-const votes = params.get("votes");
-
-document.getElementById("amount").innerText =
-  "Amount: ₦" + (votes * 350);
-
 async function submitProof(){
 
   const payer = document.getElementById("payer").value;
   const reference = document.getElementById("reference").value;
 
-  // ⚠️ Simple version (no upload yet)
+  if (!payer || !reference) {
+    alert("Fill all fields");
+    return;
+  }
+
   await fetch("/api/manual-payment",{
     method:"POST",
     headers:{ "Content-Type":"application/json" },
@@ -77,12 +83,11 @@ async function submitProof(){
       contestantId,
       votes,
       payer,
-      reference,
-      proof: "uploaded" // placeholder
+      reference
     })
   });
 
-  alert("✅ Submitted! Await admin approval.");
+  alert("✅ Payment submitted. Await confirmation.");
   location.href="/vote.html";
 }
 </script>

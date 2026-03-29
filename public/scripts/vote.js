@@ -82,6 +82,11 @@ async function loadContestants() {
           🗳 Vote Now — ₦${VOTE_PRICE}
         </button>
 
+        <button class="btn manual-btn"
+          onclick="goManual('${id}')">
+          💳 Manual Voting
+        </button>
+
         <div class="badge" id="badge-${id}"></div>
 
         <div class="share-box">
@@ -339,9 +344,12 @@ window.startVote = async contestantId => {
 };
 
 /* ===============================
-   WAIT FOR FIREBASE UPDATE
+   Go Manual voting page
 ================================ */
-
+window.goManual = (id) => {
+  const qty = Number(document.getElementById(`qty-${id}`).value) || 1;
+  location.href = `./manual-payment.html?contestantId=${id}&votes=${qty}`;
+};
 /* ===============================
    COPY LINK
 ================================ */

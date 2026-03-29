@@ -242,3 +242,23 @@ footer { text-align:center; opacity:.5; padding:2rem; }
   color: #facc15;
   margin-top: 4px;
 }
+
+.flash-banner {
+  background: linear-gradient(90deg, #22c55e, #16a34a);
+  color: white;
+  padding: 10px;
+  text-align: center;
+  font-size: 14px;
+  animation: slideDown 0.5s ease;
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+.manual-btn {
+  margin-top: 6px;
+  background: #0ea5e9;
+  color: white;
+}
