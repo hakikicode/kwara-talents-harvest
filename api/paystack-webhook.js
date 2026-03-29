@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { db } from "../public/firebase/admin";
+import { db } from "./firebase/admin.js";
 
 export const config = {
   api: {
