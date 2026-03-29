@@ -120,11 +120,14 @@ window.vote = async () => {
       amount: data.amount,
       ref: data.reference,
 
-      callback: async function (response) {
+      callback: function (response) {
+
+        (async () => {
 
         alert("✅ Payment successful!");
 
-        await fetch("/api/verify-payment", {
+        try {
+          await fetch("/api/verify-payment", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -132,7 +135,15 @@ window.vote = async () => {
           })
         });
 
-        location.reload();
+          location.reload();
+
+      } catch (err) {
+        console.error(err);
+        alert("Verification failed");
+      }
+
+      })();
+
       }
     });
 
