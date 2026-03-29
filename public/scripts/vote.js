@@ -314,6 +314,42 @@ window.startVote = async contestantId => {
           console.warn("⚠️ Vote update timeout, reload may be needed", err);
         }
       },
+      callback: async function (response) {
+
+        alert("✅ Payment successful! Verifying...");
+
+        try {
+
+        const verify = await fetch("/api/verify-payment", {
+          method: "POST",
+          headers: {
+          "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            reference: response.reference
+          })
+        });
+
+        const result = await verify.json();
+
+        if (!result.success) {
+          alert("Verification failed. Contact support.");
+          return;
+        }
+
+        // 🔥 INSTANT UI UPDATE
+        refreshVotesInstant(contestantId, qty);
+
+        // Optional smooth sync
+        setTimeout(() => {
+          location.reload();
+        }, 2000);
+
+      } catch (err) {
+        console.error(err);
+        alert("Verification error");
+        }
+      },
 
       onClose: function () {
         console.log("Payment window closed");
