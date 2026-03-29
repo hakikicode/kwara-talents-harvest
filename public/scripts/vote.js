@@ -284,52 +284,19 @@ window.startVote = async contestantId => {
 
     // 3️⃣ Setup Paystack inline payment
     const handler = PaystackPop.setup({
-      key: data.publicKey, 
-      email,
+      key: data.publicKey,
+      email: email,
       amount: data.amount,
       ref: data.reference,
 
-      callback: async function (response) {
+    callback: function (response) {
+      handlePaymentSuccess(response, contestantId, qty);
+    },
 
-        alert("✅ Payment successful! Verifying...");
-
-        try {
-
-        const verify = await fetch("/api/verify-payment", {
-          method: "POST",
-          headers: {
-          "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            reference: response.reference
-          })
-        });
-
-        const result = await verify.json();
-
-        if (!result.success) {
-          alert("Verification failed. Contact support.");
-          return;
-        }
-
-        // 🔥 INSTANT UI UPDATE
-        refreshVotesInstant(contestantId, qty);
-
-        // Optional smooth sync
-        setTimeout(() => {
-          location.reload();
-        }, 2000);
-
-      } catch (err) {
-        console.error(err);
-        alert("Verification error");
-        }
-      },
-
-      onClose: function () {
-        console.log("Payment window closed");
-      }
-    });
+    onClose: function () {
+      console.log("Payment window closed");
+    }
+  });
 
     handler.openIframe();
 
@@ -339,6 +306,42 @@ window.startVote = async contestantId => {
   }
 };
 
+/* ===============================
+   HANDLE PAYMENT SUCCESS
+================================ */
+async function handlePaymentSuccess(response, contestantId, qty) {
+  alert("✅ Payment successful! Verifying...");
+
+  try {
+    const verify = await fetch("/api/verify-payment", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        reference: response.reference
+      })
+    });
+
+    const result = await verify.json();
+
+    if (!result.success) {
+      alert("Verification failed. Contact support.");
+      return;
+    }
+
+    // 🔥 Instant UI update
+    refreshVotesInstant(contestantId, qty);
+
+    setTimeout(() => {
+      location.reload();
+    }, 2000);
+
+  } catch (err) {
+    console.error(err);
+    alert("Verification error");
+  }
+}
 /* ===============================
    Go Manual voting page
 ================================ */
