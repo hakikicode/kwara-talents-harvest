@@ -5,6 +5,7 @@ import { ref, get } from
 const id = new URLSearchParams(location.search).get("id");
 const link = location.href;
 
+
 const snap = await get(ref(db, "contestants/" + id));
 const c = snap.val();
 
@@ -12,8 +13,8 @@ document.getElementById("profile").innerHTML = `
   <div class="profile-card">
     <img src="${c.image || 'assets/default.png'}">
 
-    <h1>${c.stage_name}</h1>
-    <p>${c.full_name}</p>
+    <h1>${c.id}</h1>
+    <p>${c.id}</p>
     <p class="bio">${c.bio || "No bio provided"}</p>
 
     <div class="stats">
