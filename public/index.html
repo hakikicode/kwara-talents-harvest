@@ -46,7 +46,7 @@
     </ul>
 
     <div class="flash-actions">
-      <a href="vote.html" class="btn primary large">
+      <a href="vote.html" class="btn primary large vote-entry">
         Vote Now
       </a>
 
@@ -75,7 +75,7 @@
 
   <nav>
     <a href="#about">About</a>
-    <a href="vote.html" class="btn primary">Vote</a>
+    <a href="vote.html" class="btn primary vote-entry">Vote</a>
     <a href="register.html" class="btn secondary">Register</a>
   </nav>
 </header>
@@ -94,7 +94,7 @@
             Voting in process...
         </p>
         <div class="hero-actions">
-          <a href="vote.html" class="btn primary">Vote Now</a>
+          <a href="vote.html" class="btn primary vote-entry">Vote Now</a>
           <a href="#" class="btn outline">Registration Closed</a>
         </div>
       </div>
@@ -106,7 +106,7 @@
         <h3>Kwara Talent Harvest 6.0</h3>
         <h3>Unleashing The Talent In You</h3>
         <div class="hero-actions">
-          <a href="vote.html" class="btn primary">Voting Is Live</a>
+          <a href="vote.html" class="btn primary vote-entry">Voting Is Live</a>
         </div>
       </div>
     </div>
@@ -153,19 +153,19 @@
 <!-- TIMELINE -->
 <section class="timeline-section">
   <ul class="timeline">
-    <li>
+    <li data-stage="registration">
       <span>1</span>
       <p>Registration Open</p>
     </li>
-    <li class="active">
+    <li data-stage="screening">
       <span>2</span>
       <p>Screening</p>
     </li>
-    <li>
+    <li data-stage="voting" class="active">
       <span>3</span>
       <p>Voting Begins</p>
     </li>
-    <li>
+    <li data-stage="finale">
       <span>4</span>
       <p>Finale Event</p>
     </li>
@@ -315,7 +315,7 @@
       If you have talent, this stage is for you.
     </p>
 
-    <a href="vote.html" class="btn primary large">
+    <a href="vote.html" class="btn primary large vote-entry">
       Registration closed Vote Now  ✨
     </a>
   </div>

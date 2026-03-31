@@ -4,6 +4,36 @@ import {
   onValue
 } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 
+onValue(ref(db, "contestants"), snap => {
+  const data = snap.val();
+
+  let totalVotes = 0;
+
+  Object.values(data).forEach(c => {
+    totalVotes += c.votes || 0;
+  });
+
+  document.getElementById("stats").innerHTML =
+    `Total Votes: ${totalVotes}`;
+});
+
+onValue(ref(db, "manual_payments"), snap => {
+
+  Object.values(snap.val() || {}).forEach(p => {
+
+    if (p.status === "approved" && !p.notified) {
+
+      showVotePop(p.votes);
+
+      db.ref(`manual_payments/${p.id}`).update({
+        notified: true
+      });
+    }
+
+  });
+
+});
+
 const contestantsEl = document.getElementById("contestants");
 const paymentsEl = document.getElementById("payments");
 
@@ -103,6 +133,7 @@ onValue(ref(db, "manual_payments"), snap => {
         <p><b>Votes:</b> ${p.votes}</p>
         <p><b>Name:</b> ${p.payer}</p>
         <p><b>Ref:</b> ${p.reference}</p>
+        <img src="${p.proof}" style="width:100px;border-radius:8px">
 
         <p class="${p.status}">Status: ${p.status}</p>
 
@@ -189,3 +220,7 @@ window.reject = async (id) => {
 
   alert("❌ Rejected");
 };
+
+if (p.reference === lastReferenceUsed) {
+  el.style.border = "2px solid red";
+}

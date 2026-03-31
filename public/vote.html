@@ -17,17 +17,52 @@
   <p>₦350 per vote (₦275 Vote + ₦75 Service Fee)</p>
 </header>
 <div class="flash-banner">
-  ⚡ <h3>Instant Voting Available</h3>
-  <h4> is available via <b>Paystack(just click on vote now)</b> — votes are counted immediately.
-  Having issues? Use <b>Manual Payment</b> and upload proof — votes will be confirmed within minutes.</h4>
-  <button class="btn manual-btn"
-          onclick="goManual('${id}')">
-          💳 Manual Voting
-        </button>
+  ⚡ Instant voting is available via 
+  <b>Paystack (Vote Now)</b> — votes count immediately.
+
+  <br><br>
+
+  Having issues? Use 
+  <b>Manual Payment</b> to upload proof — votes will be confirmed within minutes.
 </div>
+
+<section class="flash-banner" id="votingStatusBanner">
+  Voting closes by <b>1:00 AM</b>.
+  <span id="votingCountdownText">Countdown loading...</span>
+</section>
 
 <section class="grid" id="contestants"></section>
 <div id="live-feed"></div>
+
+<div id="voteModal" class="modal hidden">
+  <div class="modal-content">
+
+    <h2>🗳 Vote Contestant</h2>
+
+    <label>Email</label>
+    <input type="email" id="voteEmail" placeholder="Enter your email">
+
+    <label>Number of Votes</label>
+    <input type="number" id="voteQty" min="1" value="1">
+
+    <p class="price">
+      Total: ₦<span id="voteAmount">350</span>
+    </p>
+
+    <div class="modal-actions">
+      <button onclick="payWithPaystack()" class="btn primary">
+        ⚡ Pay Now
+      </button>
+
+      <button onclick="payManual()" class="btn secondary">
+        💳 Manual Payment
+      </button>
+    </div>
+
+    <button class="close" onclick="closeModal()">✖</button>
+
+  </div>
+</div>
 
 <script src="https://js.paystack.co/v1/inline.js"></script>
 

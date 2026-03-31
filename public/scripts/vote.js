@@ -1,71 +1,134 @@
 const MAX_VOTES_TARGET = 200;
+const VOTE_PRICE = 350;
+const VOTING_END_AT = new Date("2026-04-01T01:00:00+01:00");
+const COUNTDOWN_TIMEZONE = "Africa/Lagos";
 
 import { db } from "../firebase/setup.js";
 import {
   ref,
   get,
   set,
-  onValue
+  onValue,
+  runTransaction
 } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 
 const list = document.getElementById("contestants");
-const VOTE_PRICE = 350;
+const statusBanner = document.getElementById("votingStatusBanner");
+const countdownText = document.getElementById("votingCountdownText");
 
 const cardsMap = {};
+const lastVotesSnapshot = {};
 
-/* ===============================
-   SAFE ID HELPER
-================================ */
+let selectedContestant = null;
+let votingClosed = false;
+
 function safeId(id) {
   return id
     .replace(/\.[^/.]+$/, "")
     .replace(/[.#$\[\]]/g, "");
 }
-/* ===============================
-   LOAD CONTESTANTS
-================================ */
-async function loadContestants() {
 
-  try {
+function isVotingClosed() {
+  return Date.now() >= VOTING_END_AT.getTime();
+}
 
-    const res = await fetch(
-      "https://www.kwaratalentsharvest.com.ng/api/contestants"
-    );
+function formatTimeLeft(ms) {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
 
-    if (!res.ok) {
-      const text = await res.text();
-      console.error("API ERROR:", text);
-      throw new Error("Failed to load contestants");
+  const parts = [];
+  if (days > 0) parts.push(`${days}d`);
+  parts.push(`${hours}h`, `${minutes}m`, `${seconds}s`);
+  return parts.join(" ");
+}
+
+function formatDeadline(date) {
+  return new Intl.DateTimeFormat("en-NG", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: COUNTDOWN_TIMEZONE
+  }).format(date);
+}
+
+function showToast(msg) {
+  const el = document.getElementById("toast");
+  if (!el) {
+    alert(msg);
+    return;
+  }
+
+  el.textContent = msg;
+  el.style.display = "block";
+  setTimeout(() => {
+    el.style.display = "none";
+  }, 3000);
+}
+
+function updateVotingStatusUI() {
+  votingClosed = isVotingClosed();
+  const deadlineLabel = formatDeadline(VOTING_END_AT);
+
+  if (statusBanner && countdownText) {
+    if (votingClosed) {
+      statusBanner.style.background = "#2f1313";
+      countdownText.textContent = ` Voting closed at ${deadlineLabel}. Payments are disabled.`;
+    } else {
+      statusBanner.style.background = "";
+      countdownText.textContent = ` Voting closes in ${formatTimeLeft(VOTING_END_AT.getTime() - Date.now())}. Deadline: ${deadlineLabel}.`;
     }
+  }
 
-    const contestants = await res.json();
+  document.querySelectorAll(".vote-btn").forEach(button => {
+    button.disabled = votingClosed;
+    button.textContent = votingClosed ? "Voting Closed" : `Vote Now - ₦${VOTE_PRICE}`;
+  });
+
+  document.querySelectorAll('input[id^="qty-"]').forEach(input => {
+    input.disabled = votingClosed;
+  });
+
+  if (votingClosed) {
+    window.closeModal();
+  }
+}
+
+async function loadContestants() {
+  try {
+    const [apiRes, dbSnap] = await Promise.all([
+      fetch("https://www.kwaratalentsharvest.com.ng/api/contestants"),
+      get(ref(db, "contestants"))
+    ]);
+
+    if (!apiRes.ok) throw new Error("API failed");
+
+    const contestants = await apiRes.json();
+    const dbData = dbSnap.val() || {};
 
     list.innerHTML = "";
 
-    for (const c of contestants) {
+    for (const contestant of contestants) {
+      const id = safeId(contestant.id);
 
-      const id = safeId(c.id);
-
-      // ✅ Ensure exists in Firebase (ONLY ONCE PER CONTESTANT)
-      const dbRef = ref(db, `contestants/${id}`);
-      const snap = await get(dbRef);
-
-      if (!snap.exists()) {
-        await set(dbRef, {
-          image: c.image,
+      if (!dbData[id]) {
+        await set(ref(db, `contestants/${id}`), {
+          image: contestant.image,
           votes: 0,
           created_at: Date.now()
         });
       }
 
       const link = `${location.origin}/contestant.html?id=${id}`;
-
       const card = document.createElement("div");
       card.className = "vote-card";
 
       card.innerHTML = `
-        <img src="${c.image}"
-          class="contestant-img"
+        <img src="${contestant.image}" class="contestant-img"
           loading="lazy"
           onerror="this.src='assets/default.png'">
 
@@ -75,19 +138,18 @@ async function loadContestants() {
           <div class="bar" id="bar-${id}"></div>
         </div>
 
-        <input type="number" min="1" value="1" id="qty-${id}" />
+        <input type="number" min="1" value="1" id="qty-${id}" ${isVotingClosed() ? "disabled" : ""} />
 
         <button class="btn vote-btn"
-          onclick="startVote('${id}')">
-          🗳 Vote Now — ₦${VOTE_PRICE}
+          onclick="startVote('${id}')"
+          ${isVotingClosed() ? "disabled" : ""}>
+          ${isVotingClosed() ? "Voting Closed" : `Vote Now - ₦${VOTE_PRICE}`}
         </button>
-
 
         <div class="badge" id="badge-${id}"></div>
 
         <div class="share-box">
-          <button onclick="copyLink('${link}')">🔗 Copy</button>
-
+          <button onclick="copyLink('${link}')">Copy</button>
           <p class="urgency" id="urgency-${id}"></p>
 
           <a target="_blank"
@@ -102,318 +164,233 @@ async function loadContestants() {
         </div>
       `;
 
-      cardsMap[id] = {
-        element: card,
-        votesEl: card.querySelector(".votes")
-      };
-
+      cardsMap[id] = { element: card };
       list.appendChild(card);
     }
 
+    updateVotingStatusUI();
   } catch (err) {
-    console.error("❌ Failed loading contestants:", err);
+    console.error("Load error:", err);
+    showToast("Failed to load contestants");
   }
 }
 
-/* ===============================
-   LIVE VOTES LISTENER
-================================ */
-const lastVotesSnapshot = {};
-
 function startLiveVotes() {
-
   onValue(ref(db, "contestants"), snap => {
-
     const data = snap.val();
     if (!data) return;
 
     const sortable = [];
 
-    Object.entries(data).forEach(([id, c]) => {
-
+    Object.entries(data).forEach(([id, contestant]) => {
       if (!cardsMap[id]) return;
 
-      const votes = c.votes || 0;
+      const votes = contestant.votes || 0;
+      const percent = Math.min((votes / MAX_VOTES_TARGET) * 100, 100);
 
-      const percent = Math.min(
-        (votes / MAX_VOTES_TARGET) * 100,
-        100
-      );
-
-      // ✅ Update percentage
       const percentEl = document.getElementById(`percent-${id}`);
-      if (percentEl) {
-        percentEl.textContent = percent.toFixed(1) + "%";
-      }
-
-      // ✅ Progress bar
       const bar = document.getElementById(`bar-${id}`);
-      if (bar) {
-        bar.style.width = percent + "%";
-      }
+      const badge = document.getElementById(`badge-${id}`);
+      const urgencyEl = document.getElementById(`urgency-${id}`);
 
-      // ===============================
-      // 🔥 TRENDING + GROWTH
-      // ===============================
+      if (percentEl) percentEl.textContent = `${percent.toFixed(1)}%`;
+      if (bar) bar.style.width = `${percent}%`;
+
       const prevVotes = lastVotesSnapshot[id] || 0;
       const growth = votes - prevVotes;
-
       lastVotesSnapshot[id] = votes;
 
-      // ✅ LIVE POP + SOUND
       if (growth > 0) {
         showVotePop(growth);
-
         voteSound.currentTime = 0;
         voteSound.play().catch(() => {});
       }
 
-      // ===============================
-      // 🏆 BADGE
-      // ===============================
-      const badge = document.getElementById(`badge-${id}`);
-
       if (badge) {
-        if (growth > 20) {
-          badge.style.display = "block";
-          badge.textContent = "🔥 Trending";
-        } else {
-          badge.style.display = "none";
-        }
+        badge.style.display = growth > 20 ? "block" : "none";
+        if (growth > 20) badge.textContent = "Trending";
       }
-
-      // ===============================
-      // 🚨 URGENCY
-      // ===============================
-      const urgencyEl = document.getElementById(`urgency-${id}`);
 
       if (urgencyEl) {
-        if (percent >= 90) {
-          urgencyEl.textContent = "⚡ Almost full!";
-        } else if (percent >= 75) {
-          urgencyEl.textContent = "🔥 Going fast!";
-        } else if (percent >= 50) {
-          urgencyEl.textContent = "🚀 Halfway there!";
-        } else {
-          urgencyEl.textContent = "";
-        }
+        urgencyEl.textContent =
+          percent >= 90 ? "Almost full!" :
+          percent >= 75 ? "Going fast!" :
+          percent >= 50 ? "Halfway there!" : "";
       }
 
-      // ===============================
-      // 🎯 COLOR
-      // ===============================
       if (bar) {
-        if (percent >= 75) {
-          bar.style.background =
-            "linear-gradient(90deg, #facc15, #f59e0b)";
-        } else if (percent >= 50) {
-          bar.style.background =
-            "linear-gradient(90deg, #3b82f6, #60a5fa)";
-        } else {
-          bar.style.background =
-            "linear-gradient(90deg, #22c55e, #4ade80)";
-        }
+        bar.style.background =
+          percent >= 75
+            ? "linear-gradient(90deg, #facc15, #f59e0b)"
+            : percent >= 50
+            ? "linear-gradient(90deg, #3b82f6, #60a5fa)"
+            : "linear-gradient(90deg, #22c55e, #4ade80)";
       }
 
       sortable.push({
-        id,
         votes,
         element: cardsMap[id].element
       });
-
     });
 
-    // ✅ Sort leaderboard
     sortable
       .sort((a, b) => b.votes - a.votes)
-      .forEach(item =>
-        list.appendChild(item.element)
-      );
-
+      .forEach(item => list.appendChild(item.element));
   });
 }
 
-/* ===============================
-   DEVICE ID (ANTI FRAUD)
-================================ */
-function getDeviceId() {
-
-  let id = localStorage.getItem("device_id");
-
-  if (!id) {
-    id =
-      crypto.randomUUID() +
-      "-" +
-      navigator.userAgent.length;
-
-    localStorage.setItem("device_id", id);
-  }
-
-  return id;
+async function refreshVotesInstant(contestantId, qty) {
+  await runTransaction(
+    ref(db, `contestants/${contestantId}/votes`),
+    currentVotes => (currentVotes || 0) + qty
+  );
 }
 
-/* ===============================
-   START VOTE (UPDATED)
-================================ */
-window.startVote = async contestantId => {
+window.startVote = contestantId => {
+  if (isVotingClosed()) {
+    updateVotingStatusUI();
+    showToast("Voting closed at 1:00 AM on April 1, 2026.");
+    return;
+  }
 
-  const email = prompt("Enter your email:");
-  if (!email) return;
+  selectedContestant = contestantId;
 
-  const qty =
-    Number(document.getElementById(`qty-${contestantId}`).value) || 1;
+  const qty = Number(document.getElementById(`qty-${contestantId}`)?.value) || 1;
+
+  document.getElementById("voteQty").value = qty;
+  document.getElementById("voteAmount").textContent = qty * VOTE_PRICE;
+
+  document.getElementById("voteQty").oninput = event => {
+    const value = Math.max(1, Number(event.target.value) || 1);
+    event.target.value = value;
+    document.getElementById("voteAmount").textContent = value * VOTE_PRICE;
+  };
+
+  const savedEmail = localStorage.getItem("user_email");
+  if (savedEmail) {
+    document.getElementById("voteEmail").value = savedEmail;
+  }
+
+  document.getElementById("voteModal").classList.remove("hidden");
+};
+
+async function startVoteBackend(contestantId, email, qty) {
+  let data;
 
   try {
-
-    // 1️⃣ Initialize payment on backend
     const res = await fetch("/api/initialize-payment", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, contestantId, votes: qty })
     });
 
-    const data = await res.json().catch(() => ({}));
+    data = await res.json();
+    if (!data.reference) throw new Error("Payment init failed");
+  } catch {
+    showToast("Payment failed. Switching to manual payment.");
+    return window.goManual(contestantId, qty);
+  }
 
-    if (!data.reference) {
-      alert("Payment initialization failed");
-      return;
-    }
-
-    // 2️⃣ Instant UX feedback (popup only, not actual vote)
-    showVotePop(qty);
-
-    // 3️⃣ Setup Paystack inline payment
-    const handler = PaystackPop.setup({
-      key: data.publicKey,
-      email: email,
-      amount: data.amount,
-      ref: data.reference,
-
-    callback: function (response) {
-      handlePaymentSuccess(response, contestantId, qty);
-    },
-
-    onClose: function () {
-      console.log("Payment window closed");
-    }
+  const handler = PaystackPop.setup({
+    key: data.publicKey,
+    email,
+    amount: data.amount,
+    ref: data.reference,
+    callback: res => handlePaymentSuccess(res, contestantId, qty)
   });
 
-    handler.openIframe();
+  handler.openIframe();
+}
 
-  } catch (err) {
-    console.error(err);
-    alert("Payment failed");
-  }
-};
-
-/* ===============================
-   HANDLE PAYMENT SUCCESS
-================================ */
-async function handlePaymentSuccess(response, contestantId, qty) {
-  alert("✅ Payment successful! Verifying...");
-
+async function handlePaymentSuccess(res, contestantId, qty) {
   try {
     const verify = await fetch("/api/verify-payment", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        reference: response.reference
-      })
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reference: res.reference })
     });
 
     const result = await verify.json();
+    if (!result.success) throw new Error("Verification failed");
 
-    if (!result.success) {
-      alert("Verification failed. Contact support.");
-      return;
-    }
-
-    // 🔥 Instant UI update
-    refreshVotesInstant(contestantId, qty);
-
-    setTimeout(() => {
-      location.reload();
-    }, 2000);
-
-  } catch (err) {
-    console.error(err);
-    alert("Verification error");
+    await refreshVotesInstant(contestantId, qty);
+    showToast("Votes added!");
+  } catch {
+    showToast("Verification failed");
   }
 }
-/* ===============================
-   Go Manual voting page
-================================ */
-window.goManual = (id) => {
-  const qty = Number(document.getElementById(`qty-${id}`).value) || 1;
-  location.href = `./manual-payment.html?contestantId=${id}&votes=${qty}`;
-};
-/* ===============================
-   COPY LINK
-================================ */
+
 window.copyLink = link => {
   navigator.clipboard.writeText(link);
-  alert("Link copied!");
+  showToast("Link copied!");
 };
 
-/* ===============================
-   INIT
-================================ */
-(async () => {
-  await loadContestants();
-  startLiveVotes();
-
-  const params = new URLSearchParams(location.search);
-
-  if (params.get("success")) {
-    alert("✅ Payment successful!");
+window.goManual = (id, qtyOverride) => {
+  if (isVotingClosed()) {
+    updateVotingStatusUI();
+    showToast("Voting is closed.");
+    return;
   }
-})();
 
-/* ===============================
-   POPUP
-================================ */
+  const qty = qtyOverride || Number(document.getElementById(`qty-${id}`)?.value) || 1;
+  location.href = `./manual-payment.html?contestantId=${id}&votes=${qty}`;
+};
+
+window.closeModal = () => {
+  document.getElementById("voteModal").classList.add("hidden");
+};
+
+window.payWithPaystack = () => {
+  if (isVotingClosed()) {
+    updateVotingStatusUI();
+    return showToast("Voting is closed.");
+  }
+
+  const email = document.getElementById("voteEmail").value.trim();
+  const qty = Math.max(1, Number(document.getElementById("voteQty").value) || 1);
+
+  if (!email) return showToast("Enter email");
+
+  localStorage.setItem("user_email", email);
+  window.closeModal();
+  startVoteBackend(selectedContestant, email, qty);
+};
+
+window.payManual = () => {
+  if (isVotingClosed()) {
+    updateVotingStatusUI();
+    return showToast("Voting is closed.");
+  }
+
+  const email = document.getElementById("voteEmail").value.trim();
+
+  if (!email) return showToast("Enter email");
+
+  localStorage.setItem("user_email", email);
+  window.closeModal();
+  const qty = Math.max(1, Number(document.getElementById("voteQty").value) || 1);
+  window.goManual(selectedContestant, qty);
+};
+
 function showVotePop(votes) {
   const feed = document.getElementById("live-feed");
+  if (!feed) return;
 
   const el = document.createElement("div");
   el.className = "vote-pop";
-
-  el.textContent = `🔥 Someone just voted ${votes} vote${votes > 1 ? "s" : ""}`;
+  el.textContent = `Someone voted ${votes}`;
 
   feed.appendChild(el);
-
   setTimeout(() => el.remove(), 5000);
 }
 
-/* ===============================
-   SOUND
-================================ */
-const voteSound = new Audio("https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3");
+const voteSound = new Audio(
+  "https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3"
+);
 
-setInterval(() => {
-  const fakeVotes = Math.floor(Math.random() * 5) + 1;
-  showVotePop(fakeVotes);
-}, 15000);
-
-
-function refreshVotesInstant(contestantId, qty) {
-
-  const percentEl = document.getElementById(`percent-${contestantId}`);
-  const bar = document.getElementById(`bar-${contestantId}`);
-
-  if (!percentEl || !bar) return;
-
-  // fake increase instantly
-  const currentPercent = parseFloat(percentEl.textContent) || 0;
-
-  const addedPercent = (qty / MAX_VOTES_TARGET) * 100;
-
-  const newPercent = Math.min(currentPercent + addedPercent, 100);
-
-  percentEl.textContent = newPercent.toFixed(1) + "%";
-  bar.style.width = newPercent + "%";
-
-  showVotePop(qty);
-}
+(async () => {
+  await loadContestants();
+  startLiveVotes();
+  updateVotingStatusUI();
+  setInterval(updateVotingStatusUI, 1000);
+})();

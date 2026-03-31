@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <title>Manual Payment</title>
+  <link rel="icon" href="assets/favicon.png">
+  <link rel="stylesheet" href="styles/voting.css">
 
 <style>
 body {
@@ -39,29 +41,28 @@ button {
 </style>
 </head>
 <body>
-
+<header class="top">
+  <a href="index.html"><img src="assets/logo.png" class="logo"></a>
+  <button class="back" onclick="history.back()">← Back to Voting</button>
+</header>
 <div class="manual-container">
 
   <h2>💳 Manual Payment</h2>
 
-  <div class="notice">
-    ⚠️ After payment, upload proof. Votes will be verified within minutes.
-  </div>
-
   <div class="bank-box">
     <p><b>Bank:</b> Ecobank</p>
-    <p><b>Account Name:</b> Kwara Talent Harvest</p>
-    <p><b>Account Number:</b> 4820114717</p>
+    <p><b>Name:</b> Kwara Talent Harvest</p>
+    <p><b>Account:</b> 4820114717</p>
   </div>
 
   <h3 id="amount"></h3>
 
-  <input id="payer" placeholder="Your Name" />
-  <input id="reference" placeholder="Transfer Reference" />
+  <input id="payer" placeholder="Your Name">
+  <input id="reference" placeholder="Transaction Reference">
 
-  <input type="file" id="proof" />
+  <input type="file" id="proof" accept="image/*">
 
-  <button onclick="submitProof()">Upload Proof</button>
+  <button onclick="submitProof()">Submit Payment</button>
 
 </div>
 
@@ -70,25 +71,36 @@ async function submitProof(){
 
   const payer = document.getElementById("payer").value;
   const reference = document.getElementById("reference").value;
+  const file = document.getElementById("proof").files[0];
 
-  if (!payer || !reference) {
+  if (!payer || !reference || !file) {
     alert("Fill all fields");
     return;
   }
 
-  await fetch("/api/manual-payment",{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({
-      contestantId,
-      votes,
-      payer,
-      reference
-    })
-  });
+  const reader = new FileReader();
 
-  alert("✅ Payment submitted. Await confirmation.");
-  location.href="/vote.html";
+  reader.onload = async () => {
+
+    await fetch("/api/manual-payment", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        contestantId,
+        votes,
+        payer,
+        reference,
+        proof: reader.result
+      })
+    });
+
+    alert("✅ Submitted! Await approval.");
+    location.href = "/vote.html";
+  };
+
+  reader.readAsDataURL(file);
 }
 </script>
 
