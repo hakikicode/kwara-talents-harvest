@@ -2,63 +2,121 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Admin Dashboard – Kwara Talent Harvest</title>
+  <title>Admin Dashboard - Kwara Talent Harvest</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="styles/admin.css">
 </head>
-
 <body>
-
-<!-- CONTESTANT MODAL -->
-<div id="modal" class="modal hidden">
-  <div class="modal-card">
-    <span class="close" onclick="closeModal()">×</span>
-    <div id="modalContent"></div>
-  </div>
-</div>
-
-<div class="container">
-
-  <!-- LOGIN -->
-  <div id="loginBox" class="glass">
-    <h2>Admin Login</h2>
-    <input id="username" placeholder="Username">
-    <input id="password" type="password" placeholder="Password">
-    <button onclick="login()">Login</button>
+  <div id="modal" class="modal hidden">
+    <div class="modal-card">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <div id="modalContent"></div>
+    </div>
   </div>
 
-  <!-- DASHBOARD -->
-  <div id="dashboard" class="glass" style="display:none">
+  <div class="container">
+    <div id="loginBox" class="glass auth-panel">
+      <p class="eyebrow">Admin Access</p>
+      <h1>Kwara Talent Harvest Control Room</h1>
+      <p class="subtle">Manage contestants, manual payments, transactions, and live voting activity.</p>
 
-    <div class="topbar">
-      <h2>Admin Dashboard</h2>
-      <button onclick="logout()">Logout</button>
+      <div class="form-grid">
+        <input id="username" placeholder="Username" autocomplete="username">
+        <input id="password" type="password" placeholder="Password" autocomplete="current-password">
+      </div>
+
+      <button id="loginButton" onclick="login()">Login</button>
+      <p id="loginError" class="error-text"></p>
     </div>
 
-    <!-- STATS -->
-    <div class="stats">
-      <div>Total <span id="statTotal">0</span></div>
-      <div>Approved <span id="statApproved">0</span></div>
-      <div>Pending <span id="statPending">0</span></div>
-      <div>Votes <span id="statVotes">0</span></div>
+    <div id="dashboard" class="dashboard-shell hidden">
+      <section class="glass topbar-panel">
+        <div>
+          <p class="eyebrow">Admin Dashboard</p>
+          <h2>Operations Overview</h2>
+        </div>
+
+        <div class="topbar-actions">
+          <a href="admin-dashboard.html" class="ghost-link">Dashboard View</a>
+          <a href="count.html" class="ghost-link">Payments View</a>
+          <button class="ghost-button" onclick="exportCSV()">Export CSV</button>
+          <button class="ghost-button" onclick="logout()">Logout</button>
+        </div>
+      </section>
+
+      <section class="stats-grid">
+        <article class="glass stat-card">
+          <span>Total Contestants</span>
+          <strong id="statTotal">0</strong>
+        </article>
+        <article class="glass stat-card">
+          <span>Approved Contestants</span>
+          <strong id="statApproved">0</strong>
+        </article>
+        <article class="glass stat-card">
+          <span>Pending Contestants</span>
+          <strong id="statPending">0</strong>
+        </article>
+        <article class="glass stat-card">
+          <span>Total Votes</span>
+          <strong id="statVotes">0</strong>
+        </article>
+        <article class="glass stat-card">
+          <span>Manual Payments Pending</span>
+          <strong id="statManualPending">0</strong>
+        </article>
+        <article class="glass stat-card">
+          <span>Estimated Revenue</span>
+          <strong id="statRevenue">N0</strong>
+        </article>
+      </section>
+
+      <section class="glass controls-panel">
+        <div class="controls-grid">
+          <input id="search" placeholder="Search contestants by full name or stage name">
+          <select id="statusFilter">
+            <option value="all">All contestants</option>
+            <option value="pending">Pending contestants</option>
+            <option value="approved">Approved contestants</option>
+          </select>
+          <select id="paymentFilter">
+            <option value="pending">Pending manual payments</option>
+            <option value="approved">Approved manual payments</option>
+            <option value="rejected">Rejected manual payments</option>
+            <option value="all">All manual payments</option>
+          </select>
+        </div>
+        <p id="adminMessage" class="helper-text"></p>
+      </section>
+
+      <section class="grid-sections">
+        <div class="glass section-panel">
+          <div class="section-head">
+            <h3>Contestants</h3>
+            <span id="contestantCountLabel" class="pill">0 loaded</span>
+          </div>
+          <div id="contestantList" class="stack-list"></div>
+        </div>
+
+        <div class="glass section-panel">
+          <div class="section-head">
+            <h3>Manual Payments</h3>
+            <span id="manualCountLabel" class="pill">0 showing</span>
+          </div>
+          <div id="manualPaymentsList" class="stack-list"></div>
+        </div>
+      </section>
+
+      <section class="glass section-panel">
+        <div class="section-head">
+          <h3>Paystack Transactions</h3>
+          <span id="transactionCountLabel" class="pill">0 records</span>
+        </div>
+        <div id="transactionList" class="stack-list"></div>
+      </section>
     </div>
-
-    <input
-      id="search"
-      placeholder="Search by name or stage name"
-    />
-
-    <h3>⏳ Pending Contestants</h3>
-    <div id="pendingList"></div>
-
-    <h3>✅ Approved Contestants</h3>
-    <div id="approvedList"></div>
-
-    <button onclick="exportCSV()">Export CSV</button>
   </div>
 
-</div>
-
-<script type="module" src="scripts/admin.js"></script>
+  <script type="module" src="scripts/admin.js"></script>
 </body>
 </html>

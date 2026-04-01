@@ -1,22 +1,31 @@
-import { db } from "../firebase/admin.js";
+import { db } from "./firebase/admin.js";
+import { requireAdmin } from "./_admin.js";
 
 export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
 
-  const { contestantId, votes } = req.body;
+  if (!requireAdmin(req, res)) {
+    return;
+  }
 
-  if (!contestantId || !votes) {
+  const { contestantId, votes } = req.body || {};
+  const voteCount = Number(votes);
+
+  if (!contestantId || !voteCount) {
     return res.status(400).json({ error: "Missing fields" });
   }
 
   try {
 
     await db.ref(`contestants/${contestantId}/votes`)
-      .transaction(v => (v || 0) + Number(votes));
+      .transaction(v => (v || 0) + voteCount);
 
-    res.json({ success: true });
+    return res.json({ success: true });
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Failed" });
+    return res.status(500).json({ error: "Failed" });
   }
 }

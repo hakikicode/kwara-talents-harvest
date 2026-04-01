@@ -2,53 +2,23 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Admin – Vote Control</title>
-  <meta name="viewport" content="width=device-width">
-
-  <style>
-    body {
-  background:#0b0f1a;
-  color:#fff;
-  font-family:Arial;
-}
-
-.card {
-  background:#020617;
-  border:1px solid #1f2937;
-  padding:15px;
-  margin-bottom:12px;
-  border-radius:10px;
-  transition:0.2s;
-}
-
-.card:hover {
-  transform:scale(1.02);
-}
-
-.approve { background:#22c55e; }
-.reject { background:#ef4444; }
-.pending { color:#facc15; }
-  </style>
+  <title>Admin Payments Redirect</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="styles/admin.css">
 </head>
 <body>
+  <div class="container">
+    <section class="glass auth-panel">
+      <p class="eyebrow">Manual Payments</p>
+      <h1>Payment review has moved into the main admin panel</h1>
+      <p class="subtle">Pending manual payments, approval, rejection, and transaction monitoring now sit alongside contestant management.</p>
+      <div class="topbar-actions">
+        <a class="ghost-link" href="admin.html">Open Admin Panel</a>
+      </div>
+      <p id="redirectMessage" class="helper-text">Redirecting...</p>
+    </section>
+  </div>
 
-<h1>🛠 Admin Panel – Manual Payments</h1>
-
-<div id="list"></div>
-
-<h2>🏆 Contestants</h2>
-<div id="contestants"></div>
-
-<hr>
-
-<h2>💳 Manual Payments</h2>
-<div id="payments"></div>
-
-<h2>💰 Paystack Payments</h2>
-<div id="transactions"></div>
-
-
-<script type="module" src="scripts/count.js"></script>
-
+  <script type="module" src="scripts/count.js"></script>
 </body>
 </html>

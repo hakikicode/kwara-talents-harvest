@@ -1,34 +1,32 @@
-import { db } from "../firebase/setup.js";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import {
+  createAdminToken,
+  getAdminConfig,
+  setAdminCookie
+} from "./_admin.js";
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).end();
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
 
-  const { username, password } = req.body;
+  const { username, password } = req.body || {};
+  const admin = getAdminConfig();
 
-  const snap = await db
-    .collection("admin")
-    .where("username", "==", username)
-    .limit(1)
-    .get();
-
-  if (snap.empty) {
+  if (username !== admin.username || password !== admin.password) {
     return res.status(401).json({ error: "Invalid credentials" });
   }
 
-  const admin = snap.docs[0].data();
+  const token = createAdminToken({
+    username,
+    role: "admin",
+    exp: Date.now() + 8 * 60 * 60 * 1000
+  });
 
-  const valid = bcrypt.compareSync(password, admin.password_hash);
-  if (!valid) {
-    return res.status(401).json({ error: "Invalid credentials" });
-  }
+  setAdminCookie(res, token);
 
-  const token = jwt.sign(
-    { username: admin.username, role: admin.role },
-    process.env.ADMIN_JWT_SECRET,
-    { expiresIn: "8h" }
-  );
-
-  res.json({ token });
+  return res.json({
+    success: true,
+    token,
+    username
+  });
 }
