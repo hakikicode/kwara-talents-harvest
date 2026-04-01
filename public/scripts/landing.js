@@ -184,18 +184,20 @@ function loadContestants() {
       if (contestant.status !== "approved") return;
 
       const card = document.createElement("div");
-      card.className = "vote-card";
+      card.className = "contestant-card landing-contestant-card";
 
       const actionLabel = isVotingClosed() ? "Voting Closed" : "Vote Now";
 
       card.innerHTML = `
-        <img src="${contestant.image || "assets/default.png"}">
-        <h4>${contestant.stage_name}</h4>
-        <p>${contestant.full_name}</p>
-        <p>${contestant.votes || 0} Votes</p>
-        <button class="btn vote-btn" onclick="voteFromLanding('${id}')" ${isVotingClosed() ? "disabled" : ""}>
-          ${actionLabel}
-        </button>
+        <img src="${contestant.image || "assets/default.png"}" alt="${contestant.stage_name || id}">
+        <div class="info">
+          <h4>${contestant.stage_name}</h4>
+          <p>${contestant.full_name}</p>
+          <p>${contestant.votes || 0} Votes</p>
+          <button class="btn vote-btn" onclick="voteFromLanding('${id}')" ${isVotingClosed() ? "disabled" : ""}>
+            ${actionLabel}
+          </button>
+        </div>
       `;
 
       container.appendChild(card);

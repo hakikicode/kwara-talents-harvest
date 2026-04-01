@@ -241,6 +241,37 @@ body {
   opacity: 0.7;
 }
 
+.landing-contestant-card {
+  min-width: 150px;
+  max-width: 170px;
+}
+
+.landing-contestant-card img {
+  height: 120px;
+}
+
+.landing-contestant-card .info {
+  padding: 10px;
+}
+
+.landing-contestant-card h4 {
+  font-size: 0.9rem;
+  line-height: 1.25;
+  margin-bottom: 6px;
+}
+
+.landing-contestant-card p {
+  font-size: 0.75rem;
+  margin: 4px 0;
+}
+
+.landing-contestant-card .vote-btn {
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px 10px;
+  font-size: 0.78rem;
+}
+
 a.disabled {
   background-color: #ccc !important;
   color: #666 !important;
