@@ -204,6 +204,7 @@ function renderContestants() {
         <button class="warning-button" onclick="toggleVoting('${id}', ${contestant.voting_enabled === false})">
           ${contestant.voting_enabled === false ? "Enable Voting" : "Disable Voting"}
         </button>
+        <button class="danger-button" onclick="deleteContestant('${id}')">Delete</button>
       </div>
       <div class="add-votes-row">
         <input type="number" min="1" id="add-${id}" placeholder="Add votes manually">
@@ -460,6 +461,22 @@ window.exportCSV = function exportCSV() {
   link.download = "kth-admin-export.csv";
   link.click();
   URL.revokeObjectURL(url);
+};
+
+window.deleteContestant = async function deleteContestant(id) {
+  const contestant = contestantData[id];
+  const label = contestant?.stage_name || contestant?.full_name || id;
+
+  if (!window.confirm(`Delete contestant "${label}" permanently?`)) {
+    return;
+  }
+
+  try {
+    await apiPost("/api/delete-contestant", { contestantId: id });
+    setMessage(`Deleted contestant ${label}.`);
+  } catch (err) {
+    setMessage(err.message || "Failed to delete contestant.", true);
+  }
 };
 
 searchInput.oninput = renderContestants;

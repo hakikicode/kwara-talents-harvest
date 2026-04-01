@@ -171,6 +171,23 @@ function auto() {
   timer = setInterval(nextSlide, 4000);
 }
 
+function normalizeText(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+}
+
+function getContestantDisplay(contestant, id) {
+  const stageName = String(contestant.stage_name || "").trim();
+  const fullName = String(contestant.full_name || "").trim();
+
+  return {
+    stageName: stageName || id,
+    fullName: fullName || `Contestant ID: ${id}`
+  };
+}
+
 function loadContestants() {
   const container = document.getElementById("contestants");
   if (!container) return;
@@ -179,20 +196,30 @@ function loadContestants() {
     container.innerHTML = "";
 
     const data = snap.val() || {};
+    const seenApproved = new Set();
 
     Object.entries(data).forEach(([id, contestant]) => {
       if (contestant.status !== "approved") return;
+
+      const identityKey = [
+        normalizeText(contestant.stage_name) || id,
+        normalizeText(contestant.full_name) || id
+      ].join("|");
+
+      if (seenApproved.has(identityKey)) return;
+      seenApproved.add(identityKey);
 
       const card = document.createElement("div");
       card.className = "contestant-card landing-contestant-card";
 
       const actionLabel = isVotingClosed() ? "Voting Closed" : "Vote Now";
+      const display = getContestantDisplay(contestant, id);
 
       card.innerHTML = `
-        <img src="${contestant.image || "assets/default.png"}" alt="${contestant.stage_name || id}">
+        <img src="${contestant.image || "assets/default.png"}" alt="${display.stageName}">
         <div class="info">
-          <h4>${contestant.stage_name}</h4>
-          <p>${contestant.full_name}</p>
+          <h4>${display.stageName}</h4>
+          <p>${display.fullName}</p>
           <p>${contestant.votes || 0} Votes</p>
           <button class="btn vote-btn" onclick="voteFromLanding('${id}')" ${isVotingClosed() ? "disabled" : ""}>
             ${actionLabel}
