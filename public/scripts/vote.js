@@ -1,6 +1,6 @@
 const MAX_VOTES_TARGET = 200;
 const VOTE_PRICE = 350;
-const VOTING_END_AT = new Date("2026-04-01T01:00:00+01:00");
+const VOTING_END_AT = new Date("2026-04-06T23:59:59+01:00");
 const COUNTDOWN_TIMEZONE = "Africa/Lagos";
 
 import { db } from "../firebase/setup.js";
@@ -249,7 +249,7 @@ async function refreshVotesInstant(contestantId, qty) {
 window.startVote = contestantId => {
   if (isVotingClosed()) {
     updateVotingStatusUI();
-    showToast("Voting closed at 1:00 AM on April 1, 2026.");
+    showToast("Voting closes on April 6, 2026 at 11:59 PM.");
     return;
   }
 
