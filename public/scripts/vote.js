@@ -1,4 +1,4 @@
-const MAX_VOTES_TARGET = 200;
+const MAX_VOTES_TARGET = 210;
 const VOTE_PRICE = 350;
 const VOTING_END_AT = new Date("2026-04-06T23:59:59+01:00");
 const COUNTDOWN_TIMEZONE = "Africa/Lagos";
