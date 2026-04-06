@@ -2,7 +2,7 @@ import { db } from "../firebase/setup.js";
 import { ref, onValue } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 
 const popupKey = "kth_flash_seen";
-const VOTING_END_AT = new Date("2026-04-06T23:59:59+01:00");
+const VOTING_END_AT = new Date("2026-04-08T23:59:59+01:00");
 const COUNTDOWN_TIMEZONE = "Africa/Lagos";
 
 const slides = document.querySelectorAll(".hero-slide");
@@ -104,7 +104,7 @@ function updateVotingUI() {
       pageCountdown.innerText = `Voting closed at ${deadlineLabel}.`;
     }
 
-    disableVoteLinks("Voting closes on April 6, 2026 at 11:59 PM. The event has moved to the next stage.");
+    disableVoteLinks("Voting closes on April 8, 2026 at 11:59 PM. The event has moved to the next stage.");
     setTimelineStage("finale");
     return;
   }
@@ -234,7 +234,7 @@ function loadContestants() {
 
 window.voteFromLanding = contestantId => {
   if (isVotingClosed()) {
-    alert("Voting closes on April 6, 2026 at 11:59 PM. The event has moved to the next stage.");
+    alert("Voting closes on April 8, 2026 at 11:59 PM. The event has moved to the next stage.");
     return;
   }
 
