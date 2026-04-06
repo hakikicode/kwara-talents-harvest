@@ -6,6 +6,9 @@ import {
 
 const VOTE_PRICE = 350;
 const AUTH_KEY = "kth_admin_token";
+const API_BASE_URL = ["127.0.0.1", "localhost"].includes(window.location.hostname)
+  ? "http://localhost:5000"
+  : "";
 
 const loginBox = document.getElementById("loginBox");
 const dashboard = document.getElementById("dashboard");
@@ -81,8 +84,13 @@ function apiHeaders() {
   };
 }
 
+function buildApiUrl(path) {
+  if (!API_BASE_URL) return path;
+  return `${API_BASE_URL}${path}`;
+}
+
 async function apiPost(url, body) {
-  const res = await fetch(url, {
+  const res = await fetch(buildApiUrl(url), {
     method: "POST",
     headers: apiHeaders(),
     body: JSON.stringify(body)
@@ -113,7 +121,7 @@ function showLogin() {
 }
 
 async function loginRequest(username, password) {
-  const res = await fetch("/api/admin-login", {
+  const res = await fetch(buildApiUrl("/api/admin-login"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username, password })
