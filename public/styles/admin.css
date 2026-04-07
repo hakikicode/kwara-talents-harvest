@@ -182,6 +182,21 @@ button:disabled {
   color: #fff7ed;
 }
 
+.stat-toggle {
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.stat-toggle:hover {
+  transform: translateY(-2px);
+  border-color: rgba(251, 191, 36, 0.35);
+}
+
+.stat-toggle.active {
+  background: rgba(251, 191, 36, 0.14);
+  border-color: rgba(251, 191, 36, 0.45);
+}
+
 .grid-sections {
   display: grid;
   grid-template-columns: 1.35fr 1fr;
