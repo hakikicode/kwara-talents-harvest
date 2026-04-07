@@ -281,8 +281,14 @@ function renderZeroVoteContestants() {
         <span>Name</span>
         <span>ID</span>
       </div>
-      ${zeroVotes.map(([id, contestant], index) => `
-        <div class="zero-vote-row">
+      ${zeroVotes.map(([id, contestant]) => `
+        <div
+          class="zero-vote-row zero-vote-row-clickable"
+          role="button"
+          tabindex="0"
+          onclick="openContestantModal('${id}')"
+          onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openContestantModal('${id}'); }"
+        >
           <span>${contestant.stage_name || contestant.full_name || id}</span>
           <span>${id}</span>
         </div>
@@ -542,22 +548,18 @@ window.exportCSV = function exportCSV() {
 };
 
 window.exportZeroVoteCSV = function exportZeroVoteCSV() {
-  const rows = [["Full Name", "Stage Name", "Age", "Talents", "Votes", "Status", "Voting Enabled"]];
+  const rows = [["ID", "Name", "Votes"]];
 
-  const zeroVoteContestants = Object.values(contestantData).filter(contestant => {
+  const zeroVoteContestants = Object.entries(contestantData).filter(([, contestant]) => {
     const votes = Number(contestant.votes || 0);
     return votes <= 0;
   });
 
-  zeroVoteContestants.forEach(contestant => {
+  zeroVoteContestants.forEach(([id, contestant]) => {
     rows.push([
-      contestant.full_name || "",
-      contestant.stage_name || "",
-      contestant.age || "",
-      (contestant.talents || []).join(" | "),
-      contestant.votes || 0,
-      contestant.status || "pending",
-      contestant.voting_enabled === false ? "No" : "Yes"
+      id,
+      contestant.stage_name || contestant.full_name || id,
+      contestant.votes || 0
     ]);
   });
 
