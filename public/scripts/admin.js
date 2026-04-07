@@ -40,6 +40,7 @@ const contestantCountLabel = document.getElementById("contestantCountLabel");
 const manualCountLabel = document.getElementById("manualCountLabel");
 const zeroVoteCountLabel = document.getElementById("zeroVoteCountLabel");
 const transactionCountLabel = document.getElementById("transactionCountLabel");
+const zeroVoteSearch = document.getElementById("zeroVoteSearch");
 
 const modal = document.getElementById("modal");
 const modalContent = document.getElementById("modalContent");
@@ -49,6 +50,7 @@ let manualPaymentsData = {};
 let transactionsData = {};
 let listenersStarted = false;
 let zeroVoteFilterActive = false;
+let zeroVoteSearchTerm = "";
 
 function getToken() {
   return localStorage.getItem(AUTH_KEY) || "";
@@ -182,6 +184,13 @@ function getFilteredManualPayments() {
 function getZeroVoteContestants() {
   return Object.entries(contestantData)
     .filter(([, contestant]) => Number(contestant.votes || 0) <= 0)
+    .filter(([id, contestant]) => {
+      if (!zeroVoteSearchTerm) return true;
+
+      const name = `${contestant.stage_name || ""} ${contestant.full_name || ""}`.toLowerCase();
+      const query = zeroVoteSearchTerm.toLowerCase();
+      return id.toLowerCase().includes(query) || name.includes(query);
+    })
     .sort(([, a], [, b]) => {
       const aName = (a.stage_name || a.full_name || "").toString();
       const bName = (b.stage_name || b.full_name || "").toString();
@@ -272,7 +281,7 @@ function renderZeroVoteContestants() {
         <span>Name</span>
         <span>ID</span>
       </div>
-      ${zeroVotes.map(([id, contestant]) => `
+      ${zeroVotes.map(([id, contestant], index) => `
         <div class="zero-vote-row">
           <span>${contestant.stage_name || contestant.full_name || id}</span>
           <span>${id}</span>
@@ -590,6 +599,13 @@ window.toggleZeroVoteFilter = function toggleZeroVoteFilter() {
   );
   renderContestants();
 };
+
+if (zeroVoteSearch) {
+  zeroVoteSearch.oninput = event => {
+    zeroVoteSearchTerm = event.target.value.trim();
+    renderZeroVoteContestants();
+  };
+}
 
 searchInput.oninput = renderContestants;
 statusFilter.onchange = renderContestants;
