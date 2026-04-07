@@ -29,6 +29,7 @@ const statVotes = document.getElementById("statVotes");
 const statManualPending = document.getElementById("statManualPending");
 const statRevenue = document.getElementById("statRevenue");
 const statZeroVotes = document.getElementById("statZeroVotes");
+const statZeroVotesCard = document.getElementById("statZeroVotesCard");
 
 const contestantList = document.getElementById("contestantList");
 const manualPaymentsList = document.getElementById("manualPaymentsList");
@@ -45,6 +46,7 @@ let contestantData = {};
 let manualPaymentsData = {};
 let transactionsData = {};
 let listenersStarted = false;
+let zeroVoteFilterActive = false;
 
 function getToken() {
   return localStorage.getItem(AUTH_KEY) || "";
@@ -147,6 +149,10 @@ function getFilteredContestants() {
 
   return Object.entries(contestantData)
     .filter(([, contestant]) => {
+      if (zeroVoteFilterActive && Number(contestant.votes || 0) > 0) {
+        return false;
+      }
+
       if (filter !== "all" && (contestant.status || "pending") !== filter) {
         return false;
       }
@@ -191,10 +197,22 @@ function renderStats() {
 
 function renderContestants() {
   const filtered = getFilteredContestants();
-  contestantCountLabel.textContent = `${filtered.length} loaded`;
+  contestantCountLabel.textContent = zeroVoteFilterActive
+    ? `${filtered.length} loaded (zero votes)`
+    : `${filtered.length} loaded`;
+
+  if (statZeroVotesCard) {
+    statZeroVotesCard.classList.toggle("active", zeroVoteFilterActive);
+    statZeroVotesCard.setAttribute("aria-pressed", zeroVoteFilterActive ? "true" : "false");
+  }
 
   if (!filtered.length) {
-    renderEmpty(contestantList, "No contestants match the current search or status filter.");
+    renderEmpty(
+      contestantList,
+      zeroVoteFilterActive
+        ? "No contestants with zero votes match the current filters."
+        : "No contestants match the current search or status filter."
+    );
     return;
   }
 
@@ -521,6 +539,16 @@ window.deleteContestant = async function deleteContestant(id) {
   } catch (err) {
     setMessage(err.message || "Failed to delete contestant.", true);
   }
+};
+
+window.toggleZeroVoteFilter = function toggleZeroVoteFilter() {
+  zeroVoteFilterActive = !zeroVoteFilterActive;
+  setMessage(
+    zeroVoteFilterActive
+      ? "Filtering contestants with zero votes."
+      : "Showing all contestants."
+  );
+  renderContestants();
 };
 
 searchInput.oninput = renderContestants;
