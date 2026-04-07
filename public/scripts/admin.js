@@ -266,23 +266,20 @@ function renderZeroVoteContestants() {
     return;
   }
 
-  zeroVoteList.innerHTML = zeroVotes.map(([id, contestant]) => {
-    const displayName = contestant.stage_name || contestant.full_name || id;
-    return `
-      <article class="admin-card">
-        <h4>${displayName}</h4>
-        <p class="meta-line">${contestant.full_name || "No full name"} | Votes: ${contestant.votes || 0}</p>
-        <div class="card-meta">
-          <span class="mini-pill ${statusClass(contestant.status || "pending")}">${contestant.status || "pending"}</span>
-          <span class="mini-pill">ID: ${id}</span>
+  zeroVoteList.innerHTML = `
+    <div class="zero-vote-table">
+      <div class="zero-vote-row zero-vote-head">
+        <span>Name</span>
+        <span>ID</span>
+      </div>
+      ${zeroVotes.map(([id, contestant]) => `
+        <div class="zero-vote-row">
+          <span>${contestant.stage_name || contestant.full_name || id}</span>
+          <span>${id}</span>
         </div>
-        <div class="actions">
-          <button class="ghost-button" onclick="openContestantModal('${id}')">View Details</button>
-          <button class="danger-button" onclick="deleteContestant('${id}')">Delete</button>
-        </div>
-      </article>
-    `;
-  }).join("");
+      `).join("")}
+    </div>
+  `;
 }
 
 function renderManualPayments() {

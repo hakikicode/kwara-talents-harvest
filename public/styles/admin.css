@@ -226,6 +226,37 @@ button:disabled {
   gap: 12px;
 }
 
+.zero-vote-table {
+  display: grid;
+  gap: 8px;
+}
+
+.zero-vote-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+
+.zero-vote-head {
+  background: rgba(251, 191, 36, 0.12);
+  border-color: rgba(251, 191, 36, 0.24);
+  color: #fcd34d;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 12px;
+}
+
+.zero-vote-row span:last-child {
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
 .admin-card,
 .payment-card,
 .tx-card {
