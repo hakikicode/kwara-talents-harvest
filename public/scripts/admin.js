@@ -28,6 +28,7 @@ const statPending = document.getElementById("statPending");
 const statVotes = document.getElementById("statVotes");
 const statManualPending = document.getElementById("statManualPending");
 const statRevenue = document.getElementById("statRevenue");
+const statZeroVotes = document.getElementById("statZeroVotes");
 
 const contestantList = document.getElementById("contestantList");
 const manualPaymentsList = document.getElementById("manualPaymentsList");
@@ -177,6 +178,7 @@ function renderStats() {
   const approved = contestants.filter(contestant => contestant.status === "approved").length;
   const pending = contestants.length - approved;
   const manualPending = manualPayments.filter(payment => (payment.status || "pending") === "pending").length;
+  const zeroVotes = contestants.filter(contestant => Number(contestant.votes || 0) <= 0).length;
 
   statTotal.textContent = contestants.length;
   statApproved.textContent = approved;
@@ -184,6 +186,7 @@ function renderStats() {
   statVotes.textContent = votes.toLocaleString();
   statManualPending.textContent = manualPending;
   statRevenue.textContent = formatCurrency(votes * VOTE_PRICE);
+  if (statZeroVotes) statZeroVotes.textContent = zeroVotes;
 }
 
 function renderContestants() {
@@ -467,6 +470,39 @@ window.exportCSV = function exportCSV() {
   const link = document.createElement("a");
   link.href = url;
   link.download = "kth-admin-export.csv";
+  link.click();
+  URL.revokeObjectURL(url);
+};
+
+window.exportZeroVoteCSV = function exportZeroVoteCSV() {
+  const rows = [["Full Name", "Stage Name", "Age", "Talents", "Votes", "Status", "Voting Enabled"]];
+
+  const zeroVoteContestants = Object.values(contestantData).filter(contestant => {
+    const votes = Number(contestant.votes || 0);
+    return votes <= 0;
+  });
+
+  zeroVoteContestants.forEach(contestant => {
+    rows.push([
+      contestant.full_name || "",
+      contestant.stage_name || "",
+      contestant.age || "",
+      (contestant.talents || []).join(" | "),
+      contestant.votes || 0,
+      contestant.status || "pending",
+      contestant.voting_enabled === false ? "No" : "Yes"
+    ]);
+  });
+
+  const csv = rows
+    .map(row => row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(","))
+    .join("\n");
+
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "kth-contestants-no-votes.csv";
   link.click();
   URL.revokeObjectURL(url);
 };
