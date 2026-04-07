@@ -33,10 +33,12 @@ const statZeroVotesCard = document.getElementById("statZeroVotesCard");
 
 const contestantList = document.getElementById("contestantList");
 const manualPaymentsList = document.getElementById("manualPaymentsList");
+const zeroVoteList = document.getElementById("zeroVoteList");
 const transactionList = document.getElementById("transactionList");
 
 const contestantCountLabel = document.getElementById("contestantCountLabel");
 const manualCountLabel = document.getElementById("manualCountLabel");
+const zeroVoteCountLabel = document.getElementById("zeroVoteCountLabel");
 const transactionCountLabel = document.getElementById("transactionCountLabel");
 
 const modal = document.getElementById("modal");
@@ -177,6 +179,16 @@ function getFilteredManualPayments() {
     .sort(([, a], [, b]) => (b.created_at || 0) - (a.created_at || 0));
 }
 
+function getZeroVoteContestants() {
+  return Object.entries(contestantData)
+    .filter(([, contestant]) => Number(contestant.votes || 0) <= 0)
+    .sort(([, a], [, b]) => {
+      const aName = (a.stage_name || a.full_name || "").toString();
+      const bName = (b.stage_name || b.full_name || "").toString();
+      return aName.localeCompare(bName);
+    });
+}
+
 function renderStats() {
   const contestants = Object.values(contestantData);
   const manualPayments = Object.values(manualPaymentsData);
@@ -243,6 +255,36 @@ function renderContestants() {
   `).join("");
 }
 
+function renderZeroVoteContestants() {
+  const zeroVotes = getZeroVoteContestants();
+  if (zeroVoteCountLabel) {
+    zeroVoteCountLabel.textContent = `${zeroVotes.length} loaded`;
+  }
+
+  if (!zeroVotes.length) {
+    renderEmpty(zeroVoteList, "No contestants with zero votes right now.");
+    return;
+  }
+
+  zeroVoteList.innerHTML = zeroVotes.map(([id, contestant]) => {
+    const displayName = contestant.stage_name || contestant.full_name || id;
+    return `
+      <article class="admin-card">
+        <h4>${displayName}</h4>
+        <p class="meta-line">${contestant.full_name || "No full name"} | Votes: ${contestant.votes || 0}</p>
+        <div class="card-meta">
+          <span class="mini-pill ${statusClass(contestant.status || "pending")}">${contestant.status || "pending"}</span>
+          <span class="mini-pill">ID: ${id}</span>
+        </div>
+        <div class="actions">
+          <button class="ghost-button" onclick="openContestantModal('${id}')">View Details</button>
+          <button class="danger-button" onclick="deleteContestant('${id}')">Delete</button>
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
 function renderManualPayments() {
   const filtered = getFilteredManualPayments();
   manualCountLabel.textContent = `${filtered.length} showing`;
@@ -300,6 +342,7 @@ function renderAll() {
   renderStats();
   renderContestants();
   renderManualPayments();
+  renderZeroVoteContestants();
   renderTransactions();
 }
 

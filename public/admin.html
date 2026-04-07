@@ -118,6 +118,21 @@
 
       <section class="glass section-panel">
         <div class="section-head">
+          <div>
+            <h3>No Vote Contestants</h3>
+            <p class="helper-text">Contestants with 0 or missing votes.</p>
+          </div>
+
+          <div class="topbar-actions">
+            <span id="zeroVoteCountLabel" class="pill">0 loaded</span>
+            <button class="ghost-button" onclick="exportZeroVoteCSV()">Download List</button>
+          </div>
+        </div>
+        <div id="zeroVoteList" class="stack-list"></div>
+      </section>
+
+      <section class="glass section-panel">
+        <div class="section-head">
           <h3>Paystack Transactions</h3>
           <span id="transactionCountLabel" class="pill">0 records</span>
         </div>
