@@ -1,0 +1,296 @@
+const TICKET_PRICE = 5000;
+const MAX_TICKETS_PER_CONTESTANT = 20;
+const TICKETS_PER_PURCHASE = 5;
+const EVENT_DATE = new Date("2026-05-15T18:00:00+01:00");
+
+import { db } from "../firebase/setup.js";
+import {
+  ref,
+  get,
+  set,
+  onValue,
+  runTransaction
+} from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
+
+const list = document.getElementById("contestants");
+const ticketModal = document.getElementById("ticketModal");
+const ticketAmountSpan = document.getElementById("ticketAmount");
+const ticketQtyInput = document.getElementById("ticketQty");
+const eventDateEl = document.getElementById("eventDate");
+
+let selectedContestant = null;
+let ticketsSold = {}; // Track sold tickets per contestant
+
+// Format event date
+function formatEventDate(date) {
+  return new Intl.DateTimeFormat("en-NG", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "Africa/Lagos"
+  }).format(date);
+}
+
+// Safety function for Firebase keys
+function safeId(id) {
+  return id
+    .replace(/\.[^/.]+$/, "")
+    .replace(/[.#$\[\]]/g, "");
+}
+
+// Show toast notifications
+function showToast(msg) {
+  const el = document.getElementById("toast");
+  if (!el) {
+    alert(msg);
+    return;
+  }
+
+  el.textContent = msg;
+  el.style.display = "block";
+  setTimeout(() => {
+    el.style.display = "none";
+  }, 3000);
+}
+
+// Update ticket amount when quantity changes
+function updateTicketAmount() {
+  const qty = parseInt(ticketQtyInput.value) || 1;
+  const total = qty * TICKET_PRICE;
+  ticketAmountSpan.textContent = total.toLocaleString();
+}
+
+ticketQtyInput.addEventListener("change", updateTicketAmount);
+ticketQtyInput.addEventListener("input", updateTicketAmount);
+
+// Load contestants from events folder
+async function loadContestants() {
+  try {
+    // Try to load from contestants.json file first
+    let contestants = [];
+    
+    try {
+      const response = await fetch("events/contestants.json");
+      if (response.ok) {
+        contestants = await response.json();
+        console.log("Loaded contestants from contestants.json");
+      } else {
+        throw new Error("contestants.json not found");
+      }
+    } catch (error) {
+      console.warn("Could not load contestants.json, using defaults:", error.message);
+      
+      // Fallback to default contestant list if JSON file not found
+      contestants = [
+        { id: "contestant-01", name: "Contestant 1" },
+        { id: "contestant-02", name: "Contestant 2" },
+        { id: "contestant-03", name: "Contestant 3" },
+        { id: "contestant-04", name: "Contestant 4" },
+        { id: "contestant-05", name: "Contestant 5" },
+        { id: "contestant-06", name: "Contestant 6" },
+        { id: "contestant-07", name: "Contestant 7" },
+        { id: "contestant-08", name: "Contestant 8" },
+        { id: "contestant-09", name: "Contestant 9" },
+        { id: "contestant-10", name: "Contestant 10" },
+        { id: "contestant-11", name: "Contestant 11" },
+        { id: "contestant-12", name: "Contestant 12" },
+        { id: "contestant-13", name: "Contestant 13" },
+        { id: "contestant-14", name: "Contestant 14" },
+        { id: "contestant-15", name: "Contestant 15" },
+        { id: "contestant-16", name: "Contestant 16" },
+        { id: "contestant-17", name: "Contestant 17" },
+        { id: "contestant-18", name: "Contestant 18" },
+        { id: "contestant-19", name: "Contestant 19" },
+        { id: "contestant-20", name: "Contestant 20" }
+      ];
+    }
+
+    // Set event date
+    if (eventDateEl) {
+      eventDateEl.textContent = formatEventDate(EVENT_DATE);
+    }
+
+    // Load contestants and their ticket data
+    await Promise.all(
+      contestants.map(async (contestant) => {
+        // Load sold tickets from Firebase
+        const ticketRef = ref(db, `eventTickets/${safeId(contestant.id)}/sold`);
+        try {
+          const snapshot = await get(ticketRef);
+          ticketsSold[contestant.id] = snapshot.exists() ? snapshot.val() : 0;
+        } catch (error) {
+          console.warn(`Could not load ticket count for ${contestant.id}:`, error);
+          ticketsSold[contestant.id] = 0;
+        }
+
+        // Create and display card
+        renderTicketCard(contestant);
+      })
+    );
+  } catch (error) {
+    console.error("Error loading contestants:", error);
+    list.innerHTML = "<p style='grid-column: 1/-1; text-align: center; padding: 2rem;'>Error loading contestants. Please refresh the page.</p>";
+  }
+}
+
+// Render a ticket card
+function renderTicketCard(contestant) {
+  const cardId = safeId(contestant.id);
+  const sold = ticketsSold[contestant.id] || 0;
+  const available = MAX_TICKETS_PER_CONTESTANT - sold;
+  const isSoldOut = available <= 0;
+
+  // Support both naming conventions: contestant-01.jpg or kth 1.jpg
+  const imageUrl = checkImagePath(cardId);
+
+  const card = document.createElement("div");
+  card.className = "ticket-card";
+  card.innerHTML = `
+    <img src="${imageUrl}" alt="${contestant.name}" onerror="this.src='assets/placeholder.jpg'">
+    <h3>${contestant.name}</h3>
+    <p>Support your favorite talent at the Grand Finale</p>
+    <div class="tickets-available ${isSoldOut ? 'sold-out' : ''}">
+      ${isSoldOut ? '❌ SOLD OUT' : `✅ ${available} Tickets Left`}
+    </div>
+    <button onclick="openTicketModal('${cardId}', '${contestant.name}')" ${isSoldOut ? 'disabled' : ''}>
+      ${isSoldOut ? 'SOLD OUT' : '🎟️ Buy Ticket'}
+    </button>
+  `;
+
+  card.addEventListener("click", () => {
+    if (!isSoldOut) {
+      openTicketModal(cardId, contestant.name);
+    }
+  });
+
+  list.appendChild(card);
+}
+
+// Helper function to find image path (supports multiple naming conventions)
+function checkImagePath(cardId) {
+  // Extract contestant number from id (e.g., "contestant-01" -> "1")
+  const match = cardId.match(/contestant-(\d+)/);
+  if (match) {
+    const num = parseInt(match[1]);
+    // Try both naming conventions
+    // First try: contestant-01.jpg
+    // Then try: kth 1.jpg (with space)
+    return `events/${cardId}.jpg`; // Will fallback via onerror
+  }
+  return `events/${cardId}.jpg`;
+}
+
+// Open ticket purchase modal
+window.openTicketModal = function (contestantId, contestantName) {
+  selectedContestant = { id: contestantId, name: contestantName };
+  document.getElementById("modalContestantName").textContent = `Support: ${contestantName}`;
+  document.getElementById("ticketEmail").value = "";
+  document.getElementById("ticketName").value = "";
+  document.getElementById("ticketPhone").value = "";
+  document.getElementById("ticketQty").value = "1";
+  updateTicketAmount();
+  ticketModal.classList.remove("hidden");
+};
+
+// Close modal
+window.closeModal = function () {
+  ticketModal.classList.add("hidden");
+  selectedContestant = null;
+};
+
+// Close modal when clicking outside
+window.addEventListener("click", (event) => {
+  if (event.target === ticketModal) {
+    closeModal();
+  }
+});
+
+// Paystack payment handler
+window.payWithPaystack = async function () {
+  const email = document.getElementById("ticketEmail").value.trim();
+  const name = document.getElementById("ticketName").value.trim();
+  const phone = document.getElementById("ticketPhone").value.trim();
+  const qty = parseInt(document.getElementById("ticketQty").value) || 1;
+
+  if (!email || !name || !phone) {
+    alert("Please fill in all fields");
+    return;
+  }
+
+  if (qty > TICKETS_PER_PURCHASE) {
+    alert(`Maximum ${TICKETS_PER_PURCHASE} tickets per transaction`);
+    return;
+  }
+
+  const amount = qty * TICKET_PRICE * 100; // Paystack uses cents
+
+  const handler = PaystackPop.setup({
+    key: "pk_live_8b5ce52e6a0f6c6f5d2b0a1f2e3c4d5e", // Replace with your Paystack public key
+    email: email,
+    amount: amount,
+    ref: `TKT-${Date.now()}-${selectedContestant.id}`,
+    currency: "NGN",
+    onClose: function () {
+      showToast("Payment cancelled");
+    },
+    onSuccess: function (response) {
+      // Save ticket purchase to Firebase
+      saveTicketPurchase(response, email, name, phone, qty);
+    }
+  });
+
+  handler.openIframe();
+};
+
+// Manual payment handler
+window.payManual = function () {
+  alert("Manual payment feature coming soon. Please contact support for details.");
+};
+
+// Save ticket purchase to Firebase
+async function saveTicketPurchase(paymentResponse, email, name, phone, qty) {
+  if (!selectedContestant) return;
+
+  try {
+    const ticketId = `${selectedContestant.id}-${Date.now()}`;
+    const ticketsRef = ref(db, `eventTickets/${selectedContestant.id}/${ticketId}`);
+
+    const ticketData = {
+      email,
+      name,
+      phone,
+      quantity: qty,
+      amount: qty * TICKET_PRICE,
+      paymentRef: paymentResponse.reference,
+      timestamp: Date.now(),
+      status: "completed"
+    };
+
+    await set(ticketsRef, ticketData);
+
+    // Update sold counter
+    const soldRef = ref(db, `eventTickets/${selectedContestant.id}/sold`);
+    await runTransaction(soldRef, (current) => {
+      return (current || 0) + qty;
+    });
+
+    showToast(`✅ ${qty} ticket(s) purchased successfully!`);
+    closeModal();
+
+    // Refresh the page to update available tickets
+    setTimeout(() => {
+      location.reload();
+    }, 1500);
+  } catch (error) {
+    console.error("Error saving ticket purchase:", error);
+    showToast("Error saving purchase. Please contact support.");
+  }
+}
+
+// Initialize
+document.addEventListener("DOMContentLoaded", () => {
+  loadContestants();
+});
