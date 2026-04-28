@@ -29,9 +29,7 @@ function getModalElement() {
 // Preload contestant images in background for faster display
 function preloadImages(contestants) {
   contestants.forEach((contestant, index) => {
-    const imageName = contestant.image || `kth ${contestant.id}.jpg`;
-    // Use encodeURI to properly handle spaces
-    const imageUrl = `events/${encodeURI(imageName)}`;
+    const imageUrl = contestant.image; // Could be Firebase URL or local path
     const img = new Image();
     img.src = imageUrl;
   });
@@ -145,9 +143,8 @@ function renderTicketCard(contestant, id) {
   const card = document.createElement("div");
   card.className = "ticket-card";
 
-  // Use local image from events folder
-  const imageName = contestant.image || `kth ${id}.jpg`;
-  const imageUrl = `events/${encodeURI(imageName)}`;
+  // Use Firebase URL or local image URL
+  const imageUrl = contestant.image || `events/kth%20${id}.jpg`;
 
   card.innerHTML = `
     <div class="ticket-img-wrapper">
@@ -259,7 +256,7 @@ window.addEventListener("click", (event) => {
 // Paystack payment handler (like voting page)
 window.payWithPaystack = async function () {
   if (!selectedContestant || !selectedContestant.id) {
-    showToast("❌ Please select a contestant first");
+    alert("Please select a contestant first");
     return;
   }
 
@@ -269,26 +266,28 @@ window.payWithPaystack = async function () {
   const qty = parseInt(document.getElementById("ticketQty").value) || 1;
 
   if (!email || !name || !phone) {
-    showToast("❌ Please fill in all fields");
+    alert("Please fill in all fields");
     return;
   }
 
   // Validate email
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    showToast("❌ Please enter a valid email address");
+    alert("Please enter a valid email address");
     return;
   }
 
   if (qty > 5) {
-    showToast("⚠️ Maximum 5 tickets per transaction");
+    alert("Maximum 5 tickets per transaction");
     return;
   }
 
   try {
-    showToast("⏳ Processing payment...");
-    
     // Save to localStorage for persistence
-    localStorage.setItem("user_email", email);
+    localStorage.setItem("paymentData", JSON.stringify({
+      email, name, phone, qty,
+      contestantId: selectedContestant.id,
+      contestantName: selectedContestant.name
+    }));
 
     // Initialize payment via backend
     const res = await fetch("/api/initialize-payment", {
@@ -307,38 +306,16 @@ window.payWithPaystack = async function () {
 
     const data = await res.json();
     
-    if (!res.ok) {
-      throw new Error(data.error || `API Error: ${res.status}`);
+    if (!res.ok || !data.authorizationUrl) {
+      throw new Error(data.error || "Payment initialization failed");
     }
 
-    if (!data.publicKey || !data.reference) {
-      throw new Error("Payment initialization failed - missing response data");
-    }
-
-    if (!data.amount || data.amount <= 0) {
-      throw new Error("Invalid payment amount");
-    }
-
-    showToast("⏳ Opening payment gateway...");
-
-    // Use PaystackPop to open payment
-    PaystackPop.setup({
-      key: data.publicKey,
-      email: email,
-      amount: data.amount,
-      ref: data.reference,
-      currency: "NGN",
-      onClose: () => {
-        showToast("Payment window closed");
-      },
-      onSuccess: (response) => {
-        handleTicketPaymentSuccess(response, email, name, phone, qty);
-      }
-    }).openIframe();
+    // Redirect to Paystack authorization URL
+    window.location.href = data.authorizationUrl;
 
   } catch (error) {
     console.error("Payment error:", error);
-    showToast(`❌ Error: ${error.message}`);
+    alert(`Payment Error: ${error.message}`);
   }
 };
 
@@ -418,19 +395,22 @@ async function generateETicketPDF(ticketData) {
 }
 
 // Handle successful Paystack payment
-window.handleTicketPaymentSuccess = async function (response, email, name, phone, qty) {
+// Called when user returns from Paystack payment
+window.handlePaymentReturn = async function () {
+  const urlParams = new URLSearchParams(window.location.search);
+  const reference = urlParams.get('reference');
+  const paymentData = JSON.parse(localStorage.getItem('paymentData') || '{}');
+
+  if (!reference || !paymentData.email) {
+    return;
+  }
+
   try {
-    if (!response || !response.reference) {
-      throw new Error("Invalid payment response");
-    }
-
-    showToast("⏳ Verifying payment...");
-
     // Verify payment with backend
     const verify = await fetch("/api/verify-payment", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reference: response.reference })
+      body: JSON.stringify({ reference })
     });
 
     const result = await verify.json();
@@ -439,35 +419,36 @@ window.handleTicketPaymentSuccess = async function (response, email, name, phone
       throw new Error(result.error || "Payment verification failed");
     }
 
-    showToast("✅ Payment verified! Saving ticket...");
-
     // Save ticket to Firebase and get ticket details
-    const ticketDetails = await saveTicketPurchase(email, name, phone, qty, response.reference, "completed");
-    
-    showToast("🎟️ Generating your e-ticket...");
-    closeModal();
+    const ticketDetails = await saveTicketPurchase(
+      paymentData.email, 
+      paymentData.name, 
+      paymentData.phone, 
+      paymentData.qty, 
+      reference, 
+      "completed"
+    );
     
     // Generate PDF e-ticket
     const tableNumber = ticketDetails?.tableNumber || Math.floor(Math.random() * 100) + 1;
-    const ticketNumber = ticketDetails?.ticketId || response.reference.substring(0, 12).toUpperCase();
+    const ticketNumber = ticketDetails?.ticketId || reference.substring(0, 12).toUpperCase();
     
     await generateETicketPDF({
-      name,
-      email,
+      name: paymentData.name,
+      email: paymentData.email,
       ticketNumber,
-      contestantName: selectedContestant.name,
+      contestantName: paymentData.contestantName,
       tableNumber,
-      ticketQty: qty,
-      totalAmount: qty * TICKET_PRICE
+      ticketQty: paymentData.qty,
+      totalAmount: paymentData.qty * TICKET_PRICE
     });
     
-    showToast("✅ Payment complete! Redirecting...");
-    setTimeout(() => {
-      location.href = `success.html?ref=${response.reference}&amount=${qty * TICKET_PRICE}`;
-    }, 2000);
+    // Redirect to success page
+    location.href = `success.html?ref=${reference}&amount=${paymentData.qty * TICKET_PRICE}`;
   } catch (error) {
-    console.error("Verification error:", error);
-    showToast(`⚠️ Error: ${error.message}`);
+    console.error("Payment verification error:", error);
+    alert(`Payment Error: ${error.message}`);
+    location.href = 'event.html';
   }
 };
 
@@ -549,11 +530,9 @@ async function saveTicketPurchase(email, name, phone, qty, paymentRef = null, st
 // Public function to generate ticket PDF (for manual payments and success page)
 window.generateEventTicket = async function(ticketData) {
   if (!ticketData || !ticketData.name) {
-    showToast("❌ Invalid ticket data");
+    console.error("Invalid ticket data");
     return;
   }
-  
-  showToast("📄 Generating PDF e-ticket...");
   
   await generateETicketPDF({
     name: ticketData.name || "Guest",
@@ -569,4 +548,10 @@ window.generateEventTicket = async function(ticketData) {
 // Initialize
 document.addEventListener("DOMContentLoaded", () => {
   loadContestants();
+  
+  // Check if returning from Paystack payment
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.has('reference')) {
+    handlePaymentReturn();
+  }
 });

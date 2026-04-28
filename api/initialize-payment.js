@@ -101,7 +101,7 @@ export default async function handler(req, res) {
 
     return res.json({
       reference,
-      amount,
+      amount: paymentAmount,
       publicKey,
       authorizationUrl: data.data?.authorization_url || null
     });
