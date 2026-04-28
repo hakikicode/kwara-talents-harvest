@@ -88,7 +88,6 @@ if (ticketQtyInput) {
 // Load contestants from local JSON with event folder images
 async function loadContestants() {
   try {
-    // Try to load from contestants.json first
     try {
       const res = await fetch("events/contestants.json");
       if (res.ok) {
@@ -98,7 +97,6 @@ async function loadContestants() {
         throw new Error("JSON not found");
       }
     } catch (err) {
-      // Fallback: Create default 20 contestants
       contestants = Array.from({ length: 20 }, (_, i) => ({
         id: `contestant-${String(i + 1).padStart(2, "0")}`,
         name: `Contestant ${i + 1}`
@@ -106,7 +104,6 @@ async function loadContestants() {
       console.log("Using default 20 contestants");
     }
 
-    // Set event date
     const eventDateEl = document.getElementById("eventDate");
     if (eventDateEl) {
       eventDateEl.textContent = formatEventDate(EVENT_DATE);
@@ -115,11 +112,9 @@ async function loadContestants() {
     list.innerHTML = "";
     cardsMap = {};
 
-    // Load and render each contestant
     for (const contestant of contestants) {
       const id = safeId(contestant.id);
 
-      // Initialize Firebase ticket tracking
       try {
         const ticketRef = ref(db, `eventTickets/${id}`);
         const snapshot = await get(ticketRef);
@@ -127,14 +122,23 @@ async function loadContestants() {
           await set(ticketRef, { sold: 0 });
         }
       } catch (err) {
-      console.warn(`Firebase init warning for ${id} - permissions may need updating:`, err.message);
+        console.warn(
+          `Firebase init warning for ${id}:`,
+          err.message
+        );
+      }
 
-    // Watch for live ticket updates
+      renderTicketCard(contestant, id);
+    }
+
+    preloadImages(contestants);
     watchTicketUpdates();
+
   } catch (err) {
     console.error("Load error:", err);
     showToast("Failed to load contestants. Please refresh.");
-    list.innerHTML = "<p style='grid-column: 1/-1; text-align: center; padding: 2rem; color: #f87171;'>Error loading event. Please try again.</p>";
+    list.innerHTML =
+      "<p style='grid-column: 1/-1; text-align: center; padding: 2rem; color: #f87171;'>Error loading event. Please try again.</p>";
   }
 }
 
