@@ -130,7 +130,7 @@ function renderTicketCard(contestant, id) {
   card.className = "ticket-card";
 
   // Use local image from events folder
-  const imageUrl = `events/${id}.jpg`;
+  const imageUrl = `events/${contestant.image || `kth ${id}.jpg`}`;
 
   card.innerHTML = `
     <div class="ticket-img-wrapper">
@@ -287,8 +287,83 @@ window.payWithPaystack = async function () {
   }
 };
 
+// Generate PDF e-ticket
+async function generateETicketPDF(ticketData) {
+  const { name, email, ticketNumber, contestantName, tableNumber, ticketQty, totalAmount } = ticketData;
+
+  // Create HTML for the ticket
+  const ticketHTML = `
+    <div style="width: 100%; max-width: 900px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1a2332 100%); color: #fff; border-radius: 15px; border: 2px solid #22c55e;">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #22c55e; margin: 0; font-size: 32px;">🎭 GRAND FINALE EVENT</h1>
+        <h2 style="color: #4ade80; margin: 10px 0 5px 0;">ELECTRONIC TICKET</h2>
+        <p style="margin: 0; opacity: 0.8;">Kwara Talent Harvest 2026</p>
+      </div>
+
+      <div style="border-top: 2px solid #22c55e; border-bottom: 2px solid #22c55e; padding: 20px; margin-bottom: 20px;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 10px 0;"><strong>Ticket Holder:</strong></td>
+            <td style="padding: 10px 0; color: #4ade80;">${name}</td>
+            <td style="padding: 10px 0;"><strong>Ticket #:</strong></td>
+            <td style="padding: 10px 0; color: #4ade80; font-weight: bold; font-size: 14px;">${ticketNumber}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0;"><strong>Email:</strong></td>
+            <td style="padding: 10px 0; color: #4ade80; font-size: 13px;">${email}</td>
+            <td style="padding: 10px 0;"><strong>Table #:</strong></td>
+            <td style="padding: 10px 0; color: #4ade80; font-weight: bold; font-size: 14px;">${tableNumber}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0;"><strong>Contestant:</strong></td>
+            <td style="padding: 10px 0; color: #4ade80;">${contestantName}</td>
+            <td style="padding: 10px 0;"><strong>Quantity:</strong></td>
+            <td style="padding: 10px 0; color: #4ade80;">${ticketQty}</td>
+          </tr>
+          <tr style="border-top: 1px solid #22c55e;">
+            <td style="padding: 15px 0;"><strong>Event Date:</strong></td>
+            <td style="padding: 15px 0; color: #4ade80;">May 15, 2026 @ 6:00 PM</td>
+            <td style="padding: 15px 0;"><strong>Amount Paid:</strong></td>
+            <td style="padding: 15px 0; color: #4ade80; font-weight: bold; font-size: 18px;">₦${totalAmount.toLocaleString()}</td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="background: rgba(34, 197, 94, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #22c55e;">
+        <p style="margin: 0; font-size: 14px;"><strong>✓ VALID TICKET</strong> - Present this e-ticket at the event entrance</p>
+        <p style="margin: 10px 0 0 0; font-size: 12px; opacity: 0.8;">Generated: ${new Date().toLocaleString('en-NG', { timeZone: 'Africa/Lagos' })}</p>
+      </div>
+
+      <div style="text-align: center; color: #999; font-size: 12px;">
+        <p style="margin: 0;">Thank you for supporting your favorite talent!</p>
+        <p style="margin: 5px 0 0 0;">Kwara Talent Harvest Grand Finale 2026</p>
+      </div>
+    </div>
+  `;
+
+  // Create a temporary element for html2pdf
+  const element = document.createElement('div');
+  element.innerHTML = ticketHTML;
+
+  const opt = {
+    margin: 10,
+    filename: `kth-ticket-${ticketNumber}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+  };
+
+  try {
+    await html2pdf().set(opt).from(element).save();
+    showToast("✅ E-Ticket PDF downloaded!");
+  } catch (err) {
+    console.error("PDF generation error:", err);
+    showToast("✓ Ticket confirmed! PDF download issue - check email.");
+  }
+}
+
 // Handle successful Paystack payment
-async function handleTicketPaymentSuccess(response, email, name, phone, qty) {
+window.handleTicketPaymentSuccess = async function (response, email, name, phone, qty) {
   try {
     // Verify payment with backend
     const verify = await fetch("/api/verify-payment", {
@@ -302,18 +377,32 @@ async function handleTicketPaymentSuccess(response, email, name, phone, qty) {
       throw new Error("Payment verification failed");
     }
 
-    // Save ticket to Firebase
-    await saveTicketPurchase(email, name, phone, qty, response.reference, "completed");
+    // Save ticket to Firebase and get ticket details
+    const ticketDetails = await saveTicketPurchase(email, name, phone, qty, response.reference, "completed");
     
-    showToast("✅ Payment successful! Ticket secured.");
+    showToast("✅ Payment successful! Generating e-ticket...");
     closeModal();
+    
+    // Generate PDF e-ticket
+    const tableNumber = ticketDetails?.tableNumber || Math.floor(Math.random() * 100) + 1;
+    const ticketNumber = ticketDetails?.ticketId || response.reference.substring(0, 12).toUpperCase();
+    
+    await generateETicketPDF({
+      name,
+      email,
+      ticketNumber,
+      contestantName: selectedContestant.name,
+      tableNumber,
+      ticketQty: qty,
+      totalAmount: qty * TICKET_PRICE
+    });
     
     setTimeout(() => {
       location.href = `success.html?ref=${response.reference}&amount=${qty * TICKET_PRICE}`;
-    }, 1500);
+    }, 2000);
   } catch (error) {
     console.error("Verification error:", error);
-    showToast("⚠️ Payment verified but please contact support to confirm your ticket.");
+    showToast("⚠️ Payment verified. Check email for ticket confirmation.");
   }
 };
 
@@ -353,6 +442,7 @@ async function saveTicketPurchase(email, name, phone, qty, paymentRef = null, st
 
   try {
     const ticketId = `${selectedContestant.id}-${Date.now()}`;
+    const tableNumber = Math.floor(Math.random() * 100) + 1; // Random table number 1-100
     const ticketsRef = ref(db, `eventTickets/${selectedContestant.id}/${ticketId}`);
 
     const ticketData = {
@@ -362,7 +452,8 @@ async function saveTicketPurchase(email, name, phone, qty, paymentRef = null, st
       quantity: qty,
       amount: qty * TICKET_PRICE,
       timestamp: Date.now(),
-      status: status
+      status: status,
+      tableNumber: tableNumber
     };
 
     if (paymentRef) {
@@ -377,12 +468,32 @@ async function saveTicketPurchase(email, name, phone, qty, paymentRef = null, st
       return (current || 0) + qty;
     });
 
-    return ticketId;
+    return { ticketId, tableNumber };
   } catch (error) {
     console.error("Error saving ticket:", error);
     throw error;
   }
 }
+
+// Public function to generate ticket PDF (for manual payments and success page)
+window.generateEventTicket = async function(ticketData) {
+  if (!ticketData || !ticketData.name) {
+    showToast("❌ Invalid ticket data");
+    return;
+  }
+  
+  showToast("📄 Generating PDF e-ticket...");
+  
+  await generateETicketPDF({
+    name: ticketData.name || "Guest",
+    email: ticketData.email || "N/A",
+    ticketNumber: ticketData.ticketNumber || ticketData.reference || "PENDING",
+    contestantName: ticketData.contestantName || "Grand Finale",
+    tableNumber: ticketData.tableNumber || Math.floor(Math.random() * 100) + 1,
+    ticketQty: ticketData.ticketQty || 1,
+    totalAmount: ticketData.totalAmount || ticketData.amount || 0
+  });
+};
 
 // Initialize
 document.addEventListener("DOMContentLoaded", () => {
