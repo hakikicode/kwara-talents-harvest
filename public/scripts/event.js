@@ -2,6 +2,7 @@ const TICKET_PRICE = 5000;
 const MAX_TICKETS_PER_CONTESTANT = 20;
 const TICKETS_PER_PURCHASE = 5;
 const EVENT_DATE = new Date("2026-05-15T18:00:00+01:00");
+const API_BASE_URL = "/api"; // Relative path for backend API
 
 import { db } from "../firebase/setup.js";
 import {
@@ -225,33 +226,95 @@ window.payWithPaystack = async function () {
     return;
   }
 
-  const amount = qty * TICKET_PRICE * 100; // Paystack uses cents
+  try {
+    // Initialize payment via your backend API
+    const initRes = await fetch(`${API_BASE_URL}/initialize-payment`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        amount: qty * TICKET_PRICE,
+        contestantId: selectedContestant.id,
+        ticketQty: qty,
+        type: "event-ticket",
+        buyerName: name,
+        buyerPhone: phone
+      })
+    });
 
-  const handler = PaystackPop.setup({
-    key: "pk_live_8b5ce52e6a0f6c6f5d2b0a1f2e3c4d5e", // Replace with your Paystack public key
-    email: email,
-    amount: amount,
-    ref: `TKT-${Date.now()}-${selectedContestant.id}`,
-    currency: "NGN",
-    onClose: function () {
-      showToast("Payment cancelled");
-    },
-    onSuccess: function (response) {
-      // Save ticket purchase to Firebase
-      saveTicketPurchase(response, email, name, phone, qty);
-    }
-  });
+    const initData = await initRes.json();
+    if (!initData.reference) throw new Error("Payment initialization failed");
 
-  handler.openIframe();
+    // Open Paystack
+    const handler = PaystackPop.setup({
+      key: initData.publicKey,
+      email: email,
+      amount: initData.amount,
+      ref: initData.reference,
+      onClose: () => showToast("Payment cancelled"),
+      onSuccess: (response) => handleTicketPaymentSuccess(response, email, name, phone, qty)
+    });
+
+    handler.openIframe();
+  } catch (error) {
+    console.error("Payment init error:", error);
+    showToast("Payment setup failed. Try manual payment.");
+  }
 };
+
+// Handle successful ticket payment
+async function handleTicketPaymentSuccess(response, email, name, phone, qty) {
+  try {
+    // Verify payment via your backend API
+    const verifyRes = await fetch(`${API_BASE_URL}/verify-payment`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reference: response.reference })
+    });
+
+    const verifyData = await verifyRes.json();
+    if (!verifyData.success) throw new Error("Payment verification failed");
+
+    // Save ticket to Firebase
+    await saveTicketPurchase(response.reference, email, name, phone, qty);
+    
+    showToast("✅ Tickets purchased successfully!");
+    setTimeout(() => location.reload(), 1500);
+  } catch (error) {
+    console.error("Verification error:", error);
+    showToast("Payment verified but failed to save. Contact support.");
+  }
+}
 
 // Manual payment handler
 window.payManual = function () {
-  alert("Manual payment feature coming soon. Please contact support for details.");
+  const email = document.getElementById("ticketEmail").value.trim();
+  const name = document.getElementById("ticketName").value.trim();
+  const phone = document.getElementById("ticketPhone").value.trim();
+  const qty = parseInt(document.getElementById("ticketQty").value) || 1;
+
+  if (!email || !name || !phone) {
+    alert("Please fill in all fields");
+    return;
+  }
+
+  // Redirect to manual payment page with event ticket details
+  const params = new URLSearchParams({
+    contestantId: selectedContestant.id,
+    contestantName: selectedContestant.name,
+    ticketQty: qty,
+    amount: qty * TICKET_PRICE,
+    email: email,
+    name: name,
+    phone: phone,
+    type: "event-ticket"
+  });
+
+  location.href = `./manual-payment.html?${params.toString()}`;
 };
 
 // Save ticket purchase to Firebase
-async function saveTicketPurchase(paymentResponse, email, name, phone, qty) {
+async function saveTicketPurchase(paymentRef, email, name, phone, qty) {
   if (!selectedContestant) return;
 
   try {
@@ -264,7 +327,7 @@ async function saveTicketPurchase(paymentResponse, email, name, phone, qty) {
       phone,
       quantity: qty,
       amount: qty * TICKET_PRICE,
-      paymentRef: paymentResponse.reference,
+      paymentRef: paymentRef,
       timestamp: Date.now(),
       status: "completed"
     };
@@ -277,13 +340,6 @@ async function saveTicketPurchase(paymentResponse, email, name, phone, qty) {
       return (current || 0) + qty;
     });
 
-    showToast(`✅ ${qty} ticket(s) purchased successfully!`);
-    closeModal();
-
-    // Refresh the page to update available tickets
-    setTimeout(() => {
-      location.reload();
-    }, 1500);
   } catch (error) {
     console.error("Error saving ticket purchase:", error);
     showToast("Error saving purchase. Please contact support.");
