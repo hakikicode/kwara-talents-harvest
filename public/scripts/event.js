@@ -12,15 +12,32 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 
 const list = document.getElementById("contestants");
-const ticketModal = document.getElementById("ticketModal");
+let ticketModal = null;
 
 let selectedContestant = null;
 let cardsMap = {};
 let contestants = [];
 
+// Get modal element (delayed until DOM ready)
+function getModalElement() {
+  if (!ticketModal) {
+    ticketModal = document.getElementById("ticketModal");
+  }
+  return ticketModal;
+}
+
+// Preload contestant images in background for faster display
+function preloadImages(contestants) {
+  contestants.forEach((contestant, index) => {
+    const imageUrl = `events/${contestant.image || `kth ${contestant.id}.jpg`}`;
+    const img = new Image();
+    img.src = imageUrl;
+  });
+}
+
 // Format event date
 function formatEventDate(date) {
-  return new Intl.DateTimeFormat("en-NG", {
+  const options = {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -28,7 +45,8 @@ function formatEventDate(date) {
     hour: "numeric",
     minute: "2-digit",
     timeZone: "Africa/Lagos"
-  }).format(date);
+  };
+  return new Intl.DateTimeFormat("en-NG", options).format(date);
 }
 
 // Safety function for Firebase keys
@@ -115,6 +133,9 @@ async function loadContestants() {
       renderTicketCard(contestant, id);
     }
 
+    // Preload images for faster display
+    preloadImages(contestants);
+
     // Watch for live ticket updates
     watchTicketUpdates();
   } catch (err) {
@@ -138,6 +159,8 @@ function renderTicketCard(contestant, id) {
            class="contestant-img"
            alt="${contestant.name}"
            loading="lazy"
+           decoding="async"
+           fetchpriority="low"
            onerror="this.src='assets/default.png'">
       <div class="ticket-overlay">
         <span class="ticket-badge">🎟️ Grand Finale</span>
@@ -202,25 +225,37 @@ function watchTicketUpdates() {
 
 // Open ticket purchase modal
 window.openTicketModal = function (contestantId, contestantName) {
+  const modal = getModalElement();
+  if (!modal) {
+    showToast("❌ Modal not found. Please refresh the page.");
+    return;
+  }
+  
   selectedContestant = { id: contestantId, name: contestantName };
   document.getElementById("modalContestantName").textContent = `Support: ${contestantName}`;
-  document.getElementById("ticketEmail").value = "";
+  document.getElementById("ticketEmail").value = localStorage.getItem("user_email") || "";
   document.getElementById("ticketName").value = "";
   document.getElementById("ticketPhone").value = "";
   document.getElementById("ticketQty").value = "1";
   updateTicketAmount();
-  ticketModal.classList.remove("hidden");
+  modal.classList.remove("hidden");
+  modal.style.display = "flex";
 };
 
 // Close modal
 window.closeModal = function () {
-  ticketModal.classList.add("hidden");
+  const modal = getModalElement();
+  if (modal) {
+    modal.classList.add("hidden");
+    modal.style.display = "none";
+  }
   selectedContestant = null;
 };
 
 // Close modal when clicking outside
 window.addEventListener("click", (event) => {
-  if (event.target === ticketModal) {
+  const modal = getModalElement();
+  if (event.target === modal) {
     closeModal();
   }
 });

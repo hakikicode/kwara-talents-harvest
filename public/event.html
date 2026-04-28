@@ -7,54 +7,75 @@
   <link rel="icon" href="assets/favicon.png">
   <link rel="stylesheet" href="styles/voting.css">
   <style>
-    .event-header {
-      background: linear-gradient(135deg, #22c55e, #16a34a);
-      padding: 2rem 1rem;
-      border-radius: 20px;
-      margin: 1rem 2rem;
-      box-shadow: 0 10px 30px rgba(34, 197, 94, 0.3);
+    .event-banner {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      padding: 1.5rem 2rem;
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.05), rgba(34, 197, 94, 0.02));
+      border-bottom: 2px solid rgba(34, 197, 94, 0.3);
+      margin: 1rem 0;
     }
 
-    .event-header h1 {
-      font-size: 2.5rem;
-      margin-bottom: 0.5rem;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    .event-banner-left {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex: 0 0 100px;
     }
 
-    .event-header p {
-      font-size: 1.1rem;
-      opacity: 0.95;
-      margin: 0.3rem 0;
+    .banner-logo {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      border-radius: 10px;
     }
 
-    .event-details {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-      margin-top: 1.5rem;
-      padding: 1.5rem;
-      background: rgba(255,255,255,0.1);
-      border-radius: 15px;
-      backdrop-filter: blur(10px);
+    .event-banner-center {
+      flex: 1;
     }
 
-    .detail-item {
-      text-align: center;
-      padding: 1rem;
+    .event-banner-center h1 {
+      font-size: 1.8rem;
+      margin: 0 0 0.3rem 0;
+      color: #22c55e;
     }
 
-    .detail-item strong {
-      display: block;
-      font-size: 0.9rem;
+    .event-banner-center p {
+      margin: 0;
       opacity: 0.8;
-      margin-bottom: 0.5rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
+      font-size: 0.95rem;
     }
 
-    .detail-item .value {
-      font-size: 1.4rem;
+    .event-banner-right {
+      flex: 0 0 auto;
+    }
+
+    .quick-info {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .info-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      min-width: 80px;
+    }
+
+    .info-label {
+      font-size: 0.75rem;
+      opacity: 0.7;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.3rem;
+    }
+
+    .info-value {
+      font-size: 1.1rem;
       font-weight: bold;
+      color: #22c55e;
     }
 
     /* Premium ticket cards */
@@ -190,6 +211,91 @@
       padding: 2rem;
     }
 
+    .flash-banner {
+      background: rgba(34, 197, 94, 0.08);
+      border-left: 4px solid #22c55e;
+      padding: 1.2rem 1.5rem;
+      margin: 1rem 2rem;
+      border-radius: 8px;
+      backdrop-filter: blur(10px);
+    }
+
+    .flash-content {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .flash-icon {
+      font-size: 1.5rem;
+      flex-shrink: 0;
+      margin-top: 0.2rem;
+    }
+
+    .flash-text strong {
+      display: block;
+      font-size: 0.95rem;
+      color: #22c55e;
+      margin-bottom: 0.3rem;
+    }
+
+    .flash-text p {
+      margin: 0;
+      font-size: 0.9rem;
+      opacity: 0.85;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .event-banner {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+      }
+
+      .event-banner-left {
+        flex: 0 0 70px;
+      }
+
+      .banner-logo {
+        width: 60px;
+        height: 60px;
+      }
+
+      .event-banner-center h1 {
+        font-size: 1.4rem;
+      }
+
+      .event-banner-right {
+        width: 100%;
+      }
+
+      .quick-info {
+        justify-content: space-around;
+        width: 100%;
+      }
+
+      .grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+        padding: 1rem;
+      }
+
+      .flash-banner {
+        margin: 1rem;
+        padding: 0.8rem 1rem;
+      }
+
+      .flash-content {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .flash-icon {
+        font-size: 1.2rem;
+      }
+    }
+
     .modal {
       display: none;
       position: fixed;
@@ -201,6 +307,12 @@
       background-color: rgba(0,0,0,0.7);
       backdrop-filter: blur(5px);
       animation: fadeIn 0.2s ease;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal:not(.hidden) {
+      display: flex !important;
     }
 
     @keyframes fadeIn {
@@ -214,7 +326,6 @@
 
     .modal-content {
       background: linear-gradient(135deg, #0f172a 0%, #1a2332 100%);
-      margin: 5% auto;
       padding: 2rem;
       border: 1px solid #22c55e;
       border-radius: 20px;
@@ -223,6 +334,8 @@
       position: relative;
       box-shadow: 0 20px 60px rgba(34, 197, 94, 0.3);
       animation: slideUp 0.3s ease;
+      max-height: 90vh;
+      overflow-y: auto;
     }
 
     @keyframes slideUp {
@@ -349,32 +462,40 @@
   </a>
 </header>
 
-<section class="event-header">
-  <h1>Grand Finale Event</h1>
-  <p>Kwara Talent Harvest 2026</p>
-  <div class="event-details">
-    <div class="detail-item">
-      <strong>Event Date</strong>
-      <div class="value" id="eventDate">Coming Soon</div>
-    </div>
-    <div class="detail-item">
-      <strong>Ticket Price</strong>
-      <div class="value">₦5,000</div>
-    </div>
-    <div class="detail-item">
-      <strong>Tickets Per Contestant</strong>
-      <div class="value">20</div>
-    </div>
-    <div class="detail-item">
-      <strong>Total Available</strong>
-      <div class="value">400</div>
+<div class="event-banner">
+  <div class="event-banner-left">
+    <img src="assets/logo.png" class="banner-logo" alt="Logo">
+  </div>
+  <div class="event-banner-center">
+    <h1>Grand Finale Event</h1>
+    <p>Kwara Talent Harvest 2026</p>
+  </div>
+  <div class="event-banner-right">
+    <div class="quick-info">
+      <div class="info-item">
+        <span class="info-label">Date</span>
+        <span class="info-value" id="eventDate">May 15</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Price</span>
+        <span class="info-value">₦5,000</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Available</span>
+        <span class="info-value">400</span>
+      </div>
     </div>
   </div>
-</section>
+</div>
 
 <div class="flash-banner">
-  🎟️ <h3>Secure Your Seat Now</h3>
-  <h4>Join us for the most anticipated event of the year! Support your favorite talent by purchasing tickets for the Grand Finale. Only <b>20 tickets per contestant</b> — get yours before they sell out! <br><br>✨ Premium Event Experience • ⭐ Live Performance • 🎤 Unforgettable Moments</h4>
+  <div class="flash-content">
+    <span class="flash-icon">🎟️</span>
+    <div class="flash-text">
+      <strong>Secure Your Seat Now!</strong>
+      <p>Support your favorite talent. Only 20 tickets per contestant — get yours before they sell out!</p>
+    </div>
+  </div>
 </div>
 
 <section class="grid" id="contestants"></section>
