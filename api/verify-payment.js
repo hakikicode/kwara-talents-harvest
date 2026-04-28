@@ -33,8 +33,8 @@ export default async function handler(req, res) {
     const contestantId = meta.contestantId
       ?.replace(/\.[^/.]+$/, "")
       ?.replace(/[.#$\[\]]/g, "");
-    const votes = Number(meta.votes || 1);
     const refId = data.data.reference;
+    const paymentType = meta.type || "vote"; // Default to vote for backwards compatibility
 
     if (!contestantId) {
       return res.status(400).json({ error: "Invalid metadata" });
@@ -47,22 +47,48 @@ export default async function handler(req, res) {
       return res.json({ success: true, alreadyProcessed: true });
     }
 
-    await txRef.set({
+    // Store transaction record
+    const txData = {
       contestantId,
-      votes,
+      type: paymentType,
       created_at: Date.now()
-    });
+    };
 
-    const voteRef = db.ref(`contestants/${contestantId}/votes`);
-    await voteRef.transaction(current => {
-      return (typeof current === "number" ? current : 0) + votes;
-    });
+    if (paymentType === "vote" || !paymentType) {
+      // Handle voting payment
+      const votes = Number(meta.votes || 1);
+      txData.votes = votes;
 
-    return res.json({
-      success: true,
-      contestantId,
-      votes
-    });
+      await txRef.set(txData);
+
+      const voteRef = db.ref(`contestants/${contestantId}/votes`);
+      await voteRef.transaction(current => {
+        return (typeof current === "number" ? current : 0) + votes;
+      });
+
+      return res.json({
+        success: true,
+        contestantId,
+        votes
+      });
+    } else if (paymentType === "event-ticket") {
+      // Handle event ticket payment (ticket saving is handled by client)
+      const ticketQty = Number(meta.ticketQty || 1);
+      txData.ticketQty = ticketQty;
+      txData.buyerName = meta.buyerName || "Guest";
+      txData.buyerPhone = meta.buyerPhone || "";
+
+      await txRef.set(txData);
+
+      return res.json({
+        success: true,
+        contestantId,
+        ticketQty,
+        message: "Event ticket payment verified"
+      });
+    } else {
+      return res.status(400).json({ error: "Unknown payment type" });
+    }
   } catch (err) {
     console.error("VERIFY ERROR:", err);
     return res.status(500).json({ error: "Verification failed" });

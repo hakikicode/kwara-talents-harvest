@@ -71,7 +71,7 @@
 <body>
   <header class="top">
     <a href="index.html"><img src="assets/logo.png" class="logo" alt="KTH Logo"></a>
-    <button class="back" onclick="history.back()">Back to Event</button>
+    <button class="back" onclick="history.back()">Back to Voting</button>
   </header>
 
   <div class="manual-container">
@@ -106,7 +106,7 @@
     amountInput.value = amount > 0 ? `NGN ${amount}` : "";
 
     if (!contestantId || votes <= 0) {
-      summaryEl.textContent = "Buy Ticket to support your favourite contestant. Pay Send prove and get ticket approved within 24hrs.";
+      summaryEl.textContent = "Missing contestant or vote count. Please return to the voting page and try again.";
       submitBtn.disabled = true;
     } else {
       summaryEl.textContent = `Contestant: ${contestantId} | Votes: ${votes}`;

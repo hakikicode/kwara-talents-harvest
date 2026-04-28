@@ -262,6 +262,11 @@ window.addEventListener("click", (event) => {
 
 // Paystack payment handler (like voting page)
 window.payWithPaystack = async function () {
+  if (!selectedContestant || !selectedContestant.id) {
+    showToast("❌ Please select a contestant first");
+    return;
+  }
+
   const email = document.getElementById("ticketEmail").value.trim();
   const name = document.getElementById("ticketName").value.trim();
   const phone = document.getElementById("ticketPhone").value.trim();
@@ -278,6 +283,8 @@ window.payWithPaystack = async function () {
   }
 
   try {
+    showToast("⏳ Processing payment...");
+    
     // Save to localStorage for persistence
     localStorage.setItem("user_email", email);
 
@@ -297,8 +304,13 @@ window.payWithPaystack = async function () {
     });
 
     const data = await res.json();
+    
+    if (!res.ok) {
+      throw new Error(data.error || `API Error: ${res.status}`);
+    }
+
     if (!data.publicKey || !data.reference) {
-      throw new Error("Payment init failed");
+      throw new Error("Payment initialization failed - missing keys");
     }
 
     // Open Paystack dialog
@@ -318,7 +330,7 @@ window.payWithPaystack = async function () {
     handler.openIframe();
   } catch (error) {
     console.error("Payment error:", error);
-    showToast("❌ Payment setup failed. Try manual payment.");
+    showToast(`❌ Payment error: ${error.message}`);
   }
 };
 
@@ -400,6 +412,12 @@ async function generateETicketPDF(ticketData) {
 // Handle successful Paystack payment
 window.handleTicketPaymentSuccess = async function (response, email, name, phone, qty) {
   try {
+    if (!response || !response.reference) {
+      throw new Error("Invalid payment response");
+    }
+
+    showToast("⏳ Verifying payment...");
+
     // Verify payment with backend
     const verify = await fetch("/api/verify-payment", {
       method: "POST",
@@ -408,8 +426,9 @@ window.handleTicketPaymentSuccess = async function (response, email, name, phone
     });
 
     const result = await verify.json();
+    
     if (!result.success) {
-      throw new Error("Payment verification failed");
+      throw new Error(result.error || "Payment verification failed");
     }
 
     // Save ticket to Firebase and get ticket details
@@ -437,7 +456,7 @@ window.handleTicketPaymentSuccess = async function (response, email, name, phone
     }, 2000);
   } catch (error) {
     console.error("Verification error:", error);
-    showToast("⚠️ Payment verified. Check email for ticket confirmation.");
+    showToast(`⚠️ Error: ${error.message}`);
   }
 };
 
