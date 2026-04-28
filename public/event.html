@@ -190,83 +190,6 @@
       padding: 2rem;
     }
 
-  </style>
-</head>
-<body>
-
-<header class="top">
-  <a href="index.html">
-    <img src="assets/logo.png" class="logo">
-  </a>
-</header>
-
-<section class="event-header">
-  <h1>🎭 Grand Finale Event</h1>
-  <p>Kwara Talent Harvest 2026</p>
-  <div class="event-details">
-    <div class="detail-item">
-      <strong>Event Date</strong>
-      <div class="value" id="eventDate">Coming Soon</div>
-    </div>
-    <div class="detail-item">
-      <strong>Ticket Price</strong>
-      <div class="value">₦5,000</div>
-    </div>
-    <div class="detail-item">
-      <strong>Tickets Per Contestant</strong>
-      <div class="value">20</div>
-    </div>
-    <div class="detail-item">
-      <strong>Total Available</strong>
-      <div class="value">400</div>
-    </div>
-  </div>
-</section>
-
-<div class="flash-banner">
-  🎟️ <h3>Secure Your Seat Now</h3>
-  <h4>Join us for the most anticipated event of the year! Support your favorite talent by purchasing tickets for the Grand Finale. Only <b>20 tickets per contestant</b> — get yours before they sell out! <br><br>✨ Premium Event Experience • ⭐ Live Performance • 🎤 Unforgettable Moments</h4>
-</div>
-
-<section class="grid" id="contestants"></section>
-
-<div id="ticketModal" class="modal hidden">
-  <div class="modal-content">
-
-    <h2>🎟️ Purchase Event Ticket</h2>
-    <p id="modalContestantName" style="color: #22c55e; font-weight: bold; margin-bottom: 1rem;"></p>
-
-    <label>Email</label>
-    <input type="email" id="ticketEmail" placeholder="Enter your email">
-
-    <label>Full Name</label>
-    <input type="text" id="ticketName" placeholder="Enter your full name">
-
-    <label>Phone Number</label>
-    <input type="tel" id="ticketPhone" placeholder="Enter your phone number">
-
-    <label>Number of Tickets</label>
-    <input type="number" id="ticketQty" min="1" max="5" value="1">
-
-    <p class="price">
-      Total: ₦<span id="ticketAmount">5000</span>
-    </p>
-
-    <div class="modal-actions">
-      <button onclick="payWithPaystack()" class="btn primary">
-        ⚡ Pay Now (Paystack)
-      </button>
-
-      <button onclick="payManual()" class="btn secondary">
-        💳 Manual Payment
-      </button>
-    </div>
-
-    <button class="close" onclick="closeModal()">✖</button>
-
-  </div>
-</div>
-
     .modal {
       display: none;
       position: fixed;
@@ -417,6 +340,81 @@
       color: #22c55e;
     }
   </style>
+</head>
+<body>
+
+<header class="top">
+  <a href="index.html">
+    <img src="assets/logo.png" class="logo">
+  </a>
+</header>
+
+<section class="event-header">
+  <h1>Grand Finale Event</h1>
+  <p>Kwara Talent Harvest 2026</p>
+  <div class="event-details">
+    <div class="detail-item">
+      <strong>Event Date</strong>
+      <div class="value" id="eventDate">Coming Soon</div>
+    </div>
+    <div class="detail-item">
+      <strong>Ticket Price</strong>
+      <div class="value">₦5,000</div>
+    </div>
+    <div class="detail-item">
+      <strong>Tickets Per Contestant</strong>
+      <div class="value">20</div>
+    </div>
+    <div class="detail-item">
+      <strong>Total Available</strong>
+      <div class="value">400</div>
+    </div>
+  </div>
+</section>
+
+<div class="flash-banner">
+  🎟️ <h3>Secure Your Seat Now</h3>
+  <h4>Join us for the most anticipated event of the year! Support your favorite talent by purchasing tickets for the Grand Finale. Only <b>20 tickets per contestant</b> — get yours before they sell out! <br><br>✨ Premium Event Experience • ⭐ Live Performance • 🎤 Unforgettable Moments</h4>
+</div>
+
+<section class="grid" id="contestants"></section>
+
+<div id="ticketModal" class="modal hidden">
+  <div class="modal-content">
+
+    <h2>🎟️ Purchase Event Ticket</h2>
+    <p id="modalContestantName" style="color: #22c55e; font-weight: bold; margin-bottom: 1rem;"></p>
+
+    <label>Email</label>
+    <input type="email" id="ticketEmail" placeholder="Enter your email">
+
+    <label>Full Name</label>
+    <input type="text" id="ticketName" placeholder="Enter your full name">
+
+    <label>Phone Number</label>
+    <input type="tel" id="ticketPhone" placeholder="Enter your phone number">
+
+    <label>Number of Tickets</label>
+    <input type="number" id="ticketQty" min="1" max="5" value="1">
+
+    <p class="price">
+      Total: ₦<span id="ticketAmount">5000</span>
+    </p>
+
+    <div class="modal-actions">
+      <button onclick="payWithPaystack()" class="btn primary">
+        ⚡ Pay Now (Paystack)
+      </button>
+
+      <button onclick="payManual()" class="btn secondary">
+        💳 Manual Payment
+      </button>
+    </div>
+
+    <button class="close" onclick="closeModal()">✖</button>
+
+  </div>
+</div>
 
 <script src="https://js.paystack.co/v1/inline.js"></script>
 <script type="module" src="scripts/event.js"></script>
