@@ -45,14 +45,14 @@ export default async function handler(req, res) {
     }
     paymentAmount = ticketAmount * 100; // Convert to kobo
     metadata = { 
+      type: "event-ticket",
       contestantId, 
       ticketQty: ticketQuantity,
       buyerName: buyerName || "Guest",
       buyerPhone: buyerPhone || ""
     };
-    if (baseUrl) {
-      callbackUrl = `${baseUrl.replace(/\/$/, "")}/event.html?success=true`;
-    }
+    // Do not set callback_url for inline ticket flow to avoid redirect
+    callbackUrl = null;
   }
   else {
     return res.status(400).json({

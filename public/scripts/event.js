@@ -29,7 +29,9 @@ function getModalElement() {
 // Preload contestant images in background for faster display
 function preloadImages(contestants) {
   contestants.forEach((contestant, index) => {
-    const imageUrl = contestant.image; // Could be Firebase URL or local path
+    const imageUrl = contestant.image
+      ? (contestant.image.startsWith("http") ? contestant.image : `events/${encodeURI(contestant.image)}`)
+      : `events/${encodeURI(`kth ${contestant.id}.jpg`)}`;
     const img = new Image();
     img.src = imageUrl;
   });
@@ -147,8 +149,9 @@ function renderTicketCard(contestant, id) {
   const card = document.createElement("div");
   card.className = "ticket-card";
 
-  // Use Firebase URL or local image URL
-  const imageUrl = contestant.image || `events/kth%20${id}.jpg`;
+  const imageUrl = contestant.image
+    ? (contestant.image.startsWith("http") ? contestant.image : `events/${encodeURI(contestant.image)}`)
+    : `events/${encodeURI(`kth ${id}.jpg`)}`;
 
   card.innerHTML = `
     <div class="ticket-img-wrapper">
@@ -158,7 +161,7 @@ function renderTicketCard(contestant, id) {
            loading="lazy"
            decoding="async"
            fetchpriority="low"
-           onerror="this.src='assets/default.png'">
+           onerror="this.onerror=null; this.src='https://via.placeholder.com/600x400?text=No+Image'">
       <div class="ticket-overlay">
         <span class="ticket-badge">🎟️ Grand Finale</span>
       </div>
@@ -199,7 +202,9 @@ function watchTicketUpdates() {
       if (!cardsMap[id]) return;
 
       const sold = ticketData.sold || 0;
-      const available = MAX_TICKETS_PER_CONTESTANT - sold;
+      const reserved = ticketData.reserved || 0;
+      const totalBooked = sold + reserved;
+      const available = MAX_TICKETS_PER_CONTESTANT - totalBooked;
       const isSoldOut = available <= 0;
 
       const ticketsEl = document.getElementById(`tickets-${id}`);
@@ -310,12 +315,25 @@ window.payWithPaystack = async function () {
 
     const data = await res.json();
     
-    if (!res.ok || !data.authorizationUrl) {
+    if (!res.ok || !data.publicKey || !data.amount) {
       throw new Error(data.error || "Payment initialization failed");
     }
 
-    // Redirect to Paystack authorization URL
-    window.location.href = data.authorizationUrl;
+    const handler = PaystackPop.setup({
+      key: data.publicKey,
+      email,
+      amount: data.amount,
+      ref: data.reference,
+      currency: "NGN",
+      callback: async (response) => {
+        await handleTicketPaymentSuccess(response, email, name, phone, qty);
+      },
+      onClose: () => {
+        showToast("Payment popup closed. You can try again.");
+      }
+    });
+
+    handler.openIframe();
 
   } catch (error) {
     console.error("Payment error:", error);
@@ -430,12 +448,11 @@ window.handlePaymentReturn = async function () {
       paymentData.phone, 
       paymentData.qty, 
       reference, 
-      "completed"
+      "pending"
     );
     
-    // Generate PDF e-ticket
     const tableNumber = ticketDetails?.tableNumber || Math.floor(Math.random() * 100) + 1;
-    const ticketNumber = ticketDetails?.ticketId || reference.substring(0, 12).toUpperCase();
+    const ticketNumber = ticketDetails?.ticketCode || reference.substring(0, 12).toUpperCase();
     
     await generateETicketPDF({
       name: paymentData.name,
@@ -447,8 +464,8 @@ window.handlePaymentReturn = async function () {
       totalAmount: paymentData.qty * TICKET_PRICE
     });
     
-    // Redirect to success page
-    location.href = `success.html?ref=${reference}&amount=${paymentData.qty * TICKET_PRICE}`;
+    closeModal();
+    showToast("✅ Payment confirmed. Ticket code generated and pending admin activation.");
   } catch (error) {
     console.error("Payment verification error:", error);
     alert(`Payment Error: ${error.message}`);
@@ -491,9 +508,10 @@ async function saveTicketPurchase(email, name, phone, qty, paymentRef = null, st
   if (!selectedContestant) throw new Error("No contestant selected");
 
   try {
+    const ticketCode = `KTH-${selectedContestant.id}-${Date.now()}-${Math.floor(Math.random() * 9000) + 1000}`;
     const ticketId = `${selectedContestant.id}-${Date.now()}`;
     const tableNumber = Math.floor(Math.random() * 100) + 1; // Random table number 1-100
-    const ticketsRef = ref(db, `eventTickets/${selectedContestant.id}/${ticketId}`);
+    const ticketsRef = ref(db, `eventTickets/${selectedContestant.id}/tickets/${ticketId}`);
 
     const ticketData = {
       email,
@@ -503,6 +521,8 @@ async function saveTicketPurchase(email, name, phone, qty, paymentRef = null, st
       amount: qty * TICKET_PRICE,
       timestamp: Date.now(),
       status: status,
+      adminApproved: false,
+      ticketCode,
       tableNumber: tableNumber
     };
 
@@ -513,8 +533,9 @@ async function saveTicketPurchase(email, name, phone, qty, paymentRef = null, st
     try {
       await set(ticketsRef, ticketData);
 
-      // Update sold counter
-      const soldRef = ref(db, `eventTickets/${selectedContestant.id}/sold`);
+      // Update sold counter only when admin approves
+      // For now we keep the seat reserved, but admin will activate later
+      const soldRef = ref(db, `eventTickets/${selectedContestant.id}/reserved`);
       await runTransaction(soldRef, (current) => {
         return (current || 0) + qty;
       });
@@ -524,7 +545,7 @@ async function saveTicketPurchase(email, name, phone, qty, paymentRef = null, st
       // Continue with PDF generation even if Firebase fails
     }
 
-    return { ticketId, tableNumber };
+    return { ticketId, tableNumber, ticketCode };
   } catch (error) {
     console.error("Error saving ticket:", error);
     throw error;
