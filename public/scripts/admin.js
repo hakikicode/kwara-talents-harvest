@@ -10,9 +10,11 @@ import {
 
 const VOTE_PRICE = 350;
 const AUTH_KEY = "kth_admin_token";
-const API_BASE_URL = ["127.0.0.1", "localhost"].includes(window.location.hostname)
-  ? "http://localhost:5000"
-  : "";
+const apiBaseMeta = document.querySelector('meta[name="api-base-url"]');
+const API_BASE_URL = apiBaseMeta?.content?.trim() ||
+  (["127.0.0.1", "localhost"].includes(window.location.hostname)
+    ? "http://localhost:5000"
+    : "");
 
 const loginBox = document.getElementById("loginBox");
 const dashboard = document.getElementById("dashboard");
@@ -489,6 +491,10 @@ window.login = async function login() {
     loginButton.textContent = "Login";
   }
 };
+
+if (loginButton) {
+  loginButton.addEventListener("click", window.login);
+}
 
 window.logout = function logout() {
   clearToken();
