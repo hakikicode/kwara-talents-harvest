@@ -14,9 +14,5 @@
   { "id": "13", "name": "Contestant 13", "image": "kth 13.jpg" },
   { "id": "14", "name": "Contestant 14", "image": "kth 14.jpg" },
   { "id": "15", "name": "Contestant 15", "image": "kth 15.jpg" },
-  { "id": "16", "name": "Contestant 16", "image": "kth 16.jpg" },
-  { "id": "17", "name": "Contestant 17", "image": "kth 17.jpg" },
-  { "id": "18", "name": "Contestant 18", "image": "kth 18.jpg" },
-  { "id": "19", "name": "Contestant 19", "image": "kth 19.jpg" },
-  { "id": "20", "name": "Contestant 20", "image": "kth 20.jpg" }
+  { "id": "16", "name": "Contestant 16", "image": "kth 16.jpg" }
 ]

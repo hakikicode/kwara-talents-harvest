@@ -160,8 +160,7 @@ function renderTicketCard(contestant, id) {
            alt="${contestant.name}"
            loading="lazy"
            decoding="async"
-           fetchpriority="low"
-           onerror="this.onerror=null; this.src='https://via.placeholder.com/600x400?text=No+Image'">
+           fetchpriority="low">
       <div class="ticket-overlay">
         <span class="ticket-badge">🎟️ Grand Finale</span>
       </div>
@@ -325,7 +324,7 @@ window.payWithPaystack = async function () {
       amount: data.amount,
       ref: data.reference,
       currency: "NGN",
-      onSuccess: function(response) {
+      callback: function(response) {
         handleTicketPaymentSuccess(response, email, name, phone, qty);
       },
       onClose: function() {
