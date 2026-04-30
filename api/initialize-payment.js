@@ -95,7 +95,6 @@ export default async function handler(req, res) {
   } else if (subaccount) {
     // Fallback to single subaccount if split not available
     payload.subaccount = subaccount;
-    payload.transaction_charge = type === "event-ticket" ? 27500 : 27500;
     payload.bearer = "account";
   }
 
