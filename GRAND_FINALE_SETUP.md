@@ -105,7 +105,7 @@ key: "pk_live_YOUR_PAYSTACK_PUBLIC_KEY", // Replace with your actual key
 ### 5. Customize Event Details (Optional)
 In `public/scripts/event.js`, line 1-4:
 ```javascript
-const TICKET_PRICE = 5000;           // Change ticket price
+const TICKET_PRICE = 50;           // Change ticket price
 const MAX_TICKETS_PER_CONTESTANT = 20; // Change max tickets
 const EVENT_DATE = new Date("2026-05-15T18:00:00+01:00"); // Set real date
 ```
@@ -143,7 +143,7 @@ eventTickets/
 │   │   ├── name: "Buyer Name"
 │   │   ├── phone: "08012345678"
 │   │   ├── quantity: 1
-│   │   ├── amount: 5000
+│   │   ├── amount: 50
 │   │   ├── paymentRef: "txn_xxxxx"
 │   │   ├── timestamp: 1234567890
 │   │   └── status: "completed"

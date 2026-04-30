@@ -51,7 +51,7 @@ Get key from: https://dashboard.paystack.com → Settings → API Keys
 
 **Change ticket price:**
 ```javascript
-const TICKET_PRICE = 5000; // Change this number
+const TICKET_PRICE = 50; // Change this number
 ```
 
 **Change event date:**

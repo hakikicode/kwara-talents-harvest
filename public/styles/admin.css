@@ -211,6 +211,40 @@ button:disabled {
   margin-bottom: 14px;
 }
 
+.section-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.manual-ticket-creator {
+  display: grid;
+  gap: 12px;
+}
+
+.manual-ticket-creator input,
+.manual-ticket-creator textarea {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(15, 23, 42, 0.88);
+  color: #e2e8f0;
+  padding: 12px 14px;
+}
+
+.manual-ticket-creator textarea {
+  min-height: 120px;
+  resize: vertical;
+  font-family: monospace;
+}
+
+.manual-ticket-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .pill {
   background: rgba(251, 191, 36, 0.12);
   color: #fcd34d;

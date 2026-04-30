@@ -4,7 +4,8 @@ import {
   onValue,
   set,
   update,
-  get
+  get,
+  runTransaction
 } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 
 const VOTE_PRICE = 350;
@@ -54,7 +55,13 @@ let contestantData = {};
 let manualPaymentsData = {};
 let transactionsData = {};
 let eventTicketsData = {};
-let listenersStarted = false;
+const loadedSections = {
+  contestants: false,
+  manualPayments: false,
+  transactions: false,
+  eventTickets: false
+};
+let lastGeneratedTicketCodes = [];
 let zeroVoteFilterActive = false;
 let zeroVoteSearchTerm = "";
 
@@ -418,30 +425,48 @@ function renderAll() {
   renderEventTickets();
 }
 
-function listenForData() {
-  if (listenersStarted) return;
-  listenersStarted = true;
+window.loadContestantsData = function loadContestantsData() {
+  if (loadedSections.contestants) return;
+  loadedSections.contestants = true;
 
   onValue(ref(db, "contestants"), snap => {
     contestantData = snap.val() || {};
-    renderAll();
+    renderContestants();
+    renderStats();
+    renderZeroVoteContestants();
   });
+};
+
+window.loadManualPaymentsData = function loadManualPaymentsData() {
+  if (loadedSections.manualPayments) return;
+  loadedSections.manualPayments = true;
 
   onValue(ref(db, "manual_payments"), snap => {
     manualPaymentsData = snap.val() || {};
-    renderAll();
+    renderManualPayments();
+    renderStats();
   });
+};
+
+window.loadTransactionsData = function loadTransactionsData() {
+  if (loadedSections.transactions) return;
+  loadedSections.transactions = true;
 
   onValue(ref(db, "transactions"), snap => {
     transactionsData = snap.val() || {};
-    renderAll();
+    renderTransactions();
   });
+};
+
+window.loadEventTicketsData = function loadEventTicketsData() {
+  if (loadedSections.eventTickets) return;
+  loadedSections.eventTickets = true;
 
   onValue(ref(db, "eventTickets"), snap => {
     eventTicketsData = snap.val() || {};
     renderEventTickets();
   });
-}
+};
 
 window.login = async function login() {
   loginError.textContent = "";
@@ -455,8 +480,7 @@ window.login = async function login() {
 
     setToken(data.token);
     showDashboard();
-    listenForData();
-    setMessage(`Signed in as ${data.username}.`);
+    setMessage(`Signed in as ${data.username}. Click a section button to load its data.`);
   } catch (err) {
     loginError.textContent = err.message;
   } finally {
@@ -582,6 +606,70 @@ window.rejectPayment = async function rejectPayment(id) {
   } catch (err) {
     setMessage(err.message, true);
   }
+};
+
+window.generateManualTickets = async function generateManualTickets() {
+  const contestantId = document.getElementById("ticketContestantId").value.trim();
+  const name = document.getElementById("ticketBuyerName").value.trim();
+  const email = document.getElementById("ticketBuyerEmail").value.trim();
+  const phone = document.getElementById("ticketBuyerPhone").value.trim();
+  const quantity = Number(document.getElementById("ticketQuantity").value) || 1;
+
+  if (!contestantId || !name || !email || !phone || quantity < 1) {
+    setMessage("Fill all manual ticket fields before generating codes.", true);
+    return;
+  }
+
+  const generatedCodes = [];
+  try {
+    for (let i = 0; i < quantity; i += 1) {
+      const ticketCode = `KTH-${contestantId}-${Date.now()}-${Math.floor(Math.random() * 9000) + 1000}`;
+      const ticketId = `${contestantId}-${Date.now()}-${Math.floor(Math.random() * 9000) + 1000}`;
+      const tableNumber = Math.floor(Math.random() * 100) + 1;
+      const ticketData = {
+        email,
+        name,
+        phone,
+        quantity: 1,
+        amount: 50,
+        timestamp: Date.now(),
+        status: "pending",
+        adminApproved: false,
+        ticketCode,
+        tableNumber,
+        manual: true
+      };
+
+      await set(ref(db, `eventTickets/${contestantId}/tickets/${ticketId}`), ticketData);
+      generatedCodes.push(ticketCode);
+    }
+
+    await runTransaction(ref(db, `eventTickets/${contestantId}/reserved`), current => (current || 0) + quantity);
+
+    lastGeneratedTicketCodes = generatedCodes;
+    document.getElementById("manualTicketOutput").value = generatedCodes.join("\n");
+    setMessage(`${generatedCodes.length} manual ticket code(s) created and saved to Firebase.`);
+    loadEventTicketsData();
+  } catch (err) {
+    console.error("Generate manual tickets error:", err);
+    setMessage("Failed to create manual ticket codes.", true);
+  }
+};
+
+window.downloadManualTicketCodes = function downloadManualTicketCodes() {
+  if (!lastGeneratedTicketCodes.length) {
+    setMessage("Generate ticket codes first before downloading.", true);
+    return;
+  }
+
+  const content = lastGeneratedTicketCodes.join("\n");
+  const blob = new Blob([content], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "kth-generated-ticket-codes.txt";
+  link.click();
+  URL.revokeObjectURL(url);
 };
 
 window.approveTicket = async function approveTicket(contestantId, ticketId) {
@@ -738,8 +826,7 @@ modal.onclick = event => {
 
 if (getToken()) {
   showDashboard();
-  listenForData();
-  setMessage("Admin session restored.");
+  setMessage("Admin session restored. Click a section to load data.");
 } else {
   showLogin();
 }

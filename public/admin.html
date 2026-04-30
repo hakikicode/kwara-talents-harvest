@@ -102,17 +102,27 @@
         <div class="glass section-panel">
           <div class="section-head">
             <h3>Contestants</h3>
-            <span id="contestantCountLabel" class="pill">0 loaded</span>
+            <div class="section-actions">
+              <button class="ghost-button" onclick="loadContestantsData()">Load Contestants</button>
+              <span id="contestantCountLabel" class="pill">0 loaded</span>
+            </div>
           </div>
-          <div id="contestantList" class="stack-list"></div>
+          <div id="contestantList" class="stack-list">
+            <div class="empty-state">Click "Load Contestants" to fetch contestants and votes.</div>
+          </div>
         </div>
 
         <div class="glass section-panel">
           <div class="section-head">
             <h3>Manual Payments</h3>
-            <span id="manualCountLabel" class="pill">0 showing</span>
+            <div class="section-actions">
+              <button class="ghost-button" onclick="loadManualPaymentsData()">Load Manual Payments</button>
+              <span id="manualCountLabel" class="pill">0 showing</span>
+            </div>
           </div>
-          <div id="manualPaymentsList" class="stack-list"></div>
+          <div id="manualPaymentsList" class="stack-list">
+            <div class="empty-state">Click "Load Manual Payments" to fetch manual payment records.</div>
+          </div>
         </div>
       </section>
 
@@ -135,17 +145,46 @@
       <section class="glass section-panel">
         <div class="section-head">
           <h3>Paystack Transactions</h3>
-          <span id="transactionCountLabel" class="pill">0 records</span>
+          <div class="section-actions">
+            <button class="ghost-button" onclick="loadTransactionsData()">Load Transactions</button>
+            <span id="transactionCountLabel" class="pill">0 records</span>
+          </div>
         </div>
-        <div id="transactionList" class="stack-list"></div>
+        <div id="transactionList" class="stack-list">
+          <div class="empty-state">Click "Load Transactions" to fetch Paystack records.</div>
+        </div>
+      </section>
+
+      <section class="glass section-panel">
+        <div class="section-head">
+          <h3>Generate Manual Ticket Codes</h3>
+          <p class="helper-text">Create offline ticket codes in Firebase and download them as TXT.</p>
+        </div>
+        <div class="manual-ticket-creator">
+          <input id="ticketContestantId" placeholder="Contestant ID">
+          <input id="ticketBuyerName" placeholder="Buyer Name">
+          <input id="ticketBuyerEmail" placeholder="Buyer Email">
+          <input id="ticketBuyerPhone" placeholder="Buyer Phone">
+          <input id="ticketQuantity" type="number" min="1" max="20" placeholder="Quantity">
+          <div class="manual-ticket-actions">
+            <button class="primary-button" onclick="generateManualTickets()">Generate Ticket Codes</button>
+            <button class="ghost-button" onclick="downloadManualTicketCodes()">Download TXT</button>
+          </div>
+          <textarea id="manualTicketOutput" readonly placeholder="Generated ticket codes will appear here"></textarea>
+        </div>
       </section>
 
       <section class="glass section-panel">
         <div class="section-head">
           <h3>Event Tickets - Pending Approval</h3>
-          <span id="ticketCountLabel" class="pill">0 pending</span>
+          <div class="section-actions">
+            <button class="ghost-button" onclick="loadEventTicketsData()">Load Event Tickets</button>
+            <span id="ticketCountLabel" class="pill">0 pending</span>
+          </div>
         </div>
-        <div id="ticketsList" class="stack-list"></div>
+        <div id="ticketsList" class="stack-list">
+          <div class="empty-state">Click "Load Event Tickets" to fetch pending tickets.</div>
+        </div>
       </section>
     </div>
   </div>
