@@ -675,20 +675,35 @@ window.downloadManualTicketCodes = function downloadManualTicketCodes() {
 
 window.generateBulkTickets = async function generateBulkTickets() {
   const contestantIdsInput = document.getElementById("bulkContestantId").value.trim();
+  const selectAllContestants = document.getElementById("selectAllContestants").checked;
   const quantityPerContestant = Number(document.getElementById("bulkQuantity").value) || 1;
   const name = document.getElementById("bulkBuyerName").value.trim() || "Bulk Buyer";
   const email = document.getElementById("bulkBuyerEmail").value.trim() || "bulk@example.com";
   const phone = document.getElementById("bulkBuyerPhone").value.trim() || "0000000000";
+  const customCodesInput = document.getElementById("bulkCustomCodes").value.trim();
 
-  if (!contestantIdsInput) {
-    setMessage("Enter contestant IDs (e.g., 1,2,3 or 1-5).", true);
-    return;
-  }
+  let contestantIds = [];
 
-  const contestantIds = parseContestantIds(contestantIdsInput);
-  if (contestantIds.length === 0) {
-    setMessage("Invalid contestant ID format.", true);
-    return;
+  if (selectAllContestants) {
+    // Load all contestants if "select all" is checked
+    if (!loadedSections.contestants) {
+      await loadContestantsData();
+    }
+    contestantIds = Object.keys(contestantData).map(id => id.toString()).sort((a, b) => parseInt(a) - parseInt(b));
+    if (contestantIds.length === 0) {
+      setMessage("No contestants found. Please load contestants first.", true);
+      return;
+    }
+  } else {
+    if (!contestantIdsInput) {
+      setMessage("Enter contestant IDs or select 'Select all contestants'.", true);
+      return;
+    }
+    contestantIds = parseContestantIds(contestantIdsInput);
+    if (contestantIds.length === 0) {
+      setMessage("Invalid contestant ID format.", true);
+      return;
+    }
   }
 
   if (quantityPerContestant < 1 || quantityPerContestant > 100) {
@@ -702,13 +717,26 @@ window.generateBulkTickets = async function generateBulkTickets() {
     return;
   }
 
+  // Parse custom codes if provided
+  let customCodes = [];
+  if (customCodesInput) {
+    customCodes = customCodesInput.split(',').map(code => code.trim()).filter(code => code.length > 0);
+    if (customCodes.length !== totalTickets) {
+      setMessage(`Number of custom codes (${customCodes.length}) must match total tickets needed (${totalTickets}).`, true);
+      return;
+    }
+  }
+
   const generatedCodes = [];
   let totalGenerated = 0;
+  let customCodeIndex = 0;
 
   try {
     for (const contestantId of contestantIds) {
       for (let i = 0; i < quantityPerContestant; i += 1) {
-        const ticketCode = `KTH-${contestantId}-${Date.now()}-${Math.floor(Math.random() * 9000) + 1000}`;
+        const ticketCode = customCodes.length > 0 
+          ? customCodes[customCodeIndex++]
+          : `KTH-${contestantId}-${Date.now()}-${Math.floor(Math.random() * 9000) + 1000}`;
         const ticketId = `${contestantId}-${Date.now()}-${Math.floor(Math.random() * 9000) + 1000}`;
         const tableNumber = Math.floor(Math.random() * 100) + 1;
         const ticketData = {
@@ -786,6 +814,24 @@ window.downloadBulkTicketCodes = function downloadBulkTicketCodes() {
   link.click();
   URL.revokeObjectURL(url);
 };
+
+// Handle select all contestants checkbox
+document.addEventListener('DOMContentLoaded', function() {
+  const selectAllCheckbox = document.getElementById("selectAllContestants");
+  const contestantIdInput = document.getElementById("bulkContestantId");
+  
+  if (selectAllCheckbox && contestantIdInput) {
+    selectAllCheckbox.addEventListener('change', function() {
+      contestantIdInput.disabled = this.checked;
+      if (this.checked) {
+        contestantIdInput.value = '';
+        contestantIdInput.placeholder = 'All contestants selected';
+      } else {
+        contestantIdInput.placeholder = 'Contestant ID (e.g., 1,2,3 or 1-5)';
+      }
+    });
+  }
+});
 
 window.approveTicket = async function approveTicket(contestantId, ticketId) {
   try {

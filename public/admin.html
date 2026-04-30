@@ -163,13 +163,22 @@
         <div class="manual-ticket-creator">
           <div class="bulk-generator">
             <div class="bulk-row">
-              <input id="bulkContestantId" placeholder="Contestant ID (e.g., 1,2,3 or 1-5)">
+              <div class="contestant-selection">
+                <input id="bulkContestantId" placeholder="Contestant ID (e.g., 1,2,3 or 1-5)">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="selectAllContestants"> Select all contestants
+                </label>
+              </div>
               <input id="bulkQuantity" type="number" min="1" max="100" placeholder="Tickets per contestant">
             </div>
             <div class="bulk-row">
               <input id="bulkBuyerName" placeholder="Buyer Name (optional)">
               <input id="bulkBuyerEmail" placeholder="Buyer Email (optional)">
               <input id="bulkBuyerPhone" placeholder="Buyer Phone (optional)">
+            </div>
+            <div class="bulk-row">
+              <input id="bulkCustomCodes" placeholder="Custom ticket codes (optional, comma-separated)">
+              <span class="helper-text">Leave empty for auto-generated codes</span>
             </div>
             <div class="bulk-actions">
               <button class="primary-button" onclick="generateBulkTickets()">Generate Bulk Codes</button>
