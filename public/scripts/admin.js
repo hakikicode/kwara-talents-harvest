@@ -1,7 +1,10 @@
 import { db } from "../firebase/setup.js";
 import {
   ref,
-  onValue
+  onValue,
+  set,
+  update,
+  get
 } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 
 const VOTE_PRICE = 350;
@@ -35,6 +38,8 @@ const contestantList = document.getElementById("contestantList");
 const manualPaymentsList = document.getElementById("manualPaymentsList");
 const zeroVoteList = document.getElementById("zeroVoteList");
 const transactionList = document.getElementById("transactionList");
+const ticketsList = document.getElementById("ticketsList");
+const ticketCountLabel = document.getElementById("ticketCountLabel");
 
 const contestantCountLabel = document.getElementById("contestantCountLabel");
 const manualCountLabel = document.getElementById("manualCountLabel");
@@ -48,6 +53,7 @@ const modalContent = document.getElementById("modalContent");
 let contestantData = {};
 let manualPaymentsData = {};
 let transactionsData = {};
+let eventTicketsData = {};
 let listenersStarted = false;
 let zeroVoteFilterActive = false;
 let zeroVoteSearchTerm = "";
@@ -350,12 +356,66 @@ function renderTransactions() {
   `).join("");
 }
 
+function renderEventTickets() {
+  const tickets = [];
+  
+  // Flatten the nested structure: eventTickets/{contestantId}/tickets/{ticketId}
+  Object.entries(eventTicketsData).forEach(([contestantId, contestantTickets]) => {
+    if (contestantTickets && typeof contestantTickets === 'object' && contestantTickets.tickets) {
+      Object.entries(contestantTickets.tickets).forEach(([ticketId, ticket]) => {
+        if (ticket && (ticket.status === "pending" || !ticket.adminApproved)) {
+          tickets.push({
+            id: ticketId,
+            contestantId,
+            ...ticket
+          });
+        }
+      });
+    }
+  });
+
+  tickets.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+  ticketCountLabel.textContent = `${tickets.length} pending`;
+
+  if (!tickets.length) {
+    renderEmpty(ticketsList, "No pending ticket approvals at this time.");
+    return;
+  }
+
+  ticketsList.innerHTML = tickets.map(ticket => `
+    <article class="ticket-card">
+      <h4>${ticket.name || "Unknown"}</h4>
+      <p class="meta-line">${ticket.email || "N/A"} | ${ticket.phone || "N/A"}</p>
+      <div class="card-meta">
+        <span class="mini-pill">${ticket.quantity || 1} ticket${ticket.quantity > 1 ? 's' : ''}</span>
+        <span class="mini-pill">${formatCurrency(ticket.amount || 0)}</span>
+        <span class="mini-pill">${formatDate(ticket.timestamp)}</span>
+        <span class="mini-pill ${ticket.adminApproved ? 'status-approved' : 'status-pending'}">${ticket.adminApproved ? 'Approved' : 'Pending'}</span>
+      </div>
+      <div class="detail-row">
+        <span><b>Ticket Code:</b> <code>${ticket.ticketCode || 'N/A'}</code></span>
+      </div>
+      <div class="detail-row">
+        <span><b>Reference:</b> ${ticket.paymentRef || 'N/A'}</span>
+      </div>
+      <div class="actions">
+        ${!ticket.adminApproved ? `
+          <button class="success-button" onclick="approveTicket('${ticket.contestantId}', '${ticket.id}')">✅ Approve Ticket</button>
+          <button class="danger-button" onclick="rejectTicket('${ticket.contestantId}', '${ticket.id}')">❌ Reject Ticket</button>
+        ` : `<span class="mini-pill status-approved">Already approved</span>`}
+      </div>
+    </article>
+  `).join("");
+}
+
 function renderAll() {
   renderStats();
   renderContestants();
   renderManualPayments();
   renderZeroVoteContestants();
   renderTransactions();
+  renderEventTickets();
 }
 
 function listenForData() {
@@ -375,6 +435,11 @@ function listenForData() {
   onValue(ref(db, "transactions"), snap => {
     transactionsData = snap.val() || {};
     renderAll();
+  });
+
+  onValue(ref(db, "eventTickets"), snap => {
+    eventTicketsData = snap.val() || {};
+    renderEventTickets();
   });
 }
 
@@ -516,6 +581,58 @@ window.rejectPayment = async function rejectPayment(id) {
     setMessage("Manual payment rejected.");
   } catch (err) {
     setMessage(err.message, true);
+  }
+};
+
+window.approveTicket = async function approveTicket(contestantId, ticketId) {
+  try {
+    // Update Firebase directly for tickets
+    const ticketRef = ref(db, `eventTickets/${contestantId}/tickets/${ticketId}`);
+    const updatedData = {
+      adminApproved: true,
+      status: "approved"
+    };
+    await update(ticketRef, updatedData);
+    
+    // Increment sold counter
+    const soldRef = ref(db, `eventTickets/${contestantId}/sold`);
+    const soldsnapshot = await get(soldRef);
+    const currentSold = soldsnapshot.val() || 0;
+    await set(soldRef, currentSold + 1);
+    
+    // Decrement reserved counter
+    const reservedRef = ref(db, `eventTickets/${contestantId}/reserved`);
+    const reservedSnapshot = await get(reservedRef);
+    const currentReserved = Math.max(0, (reservedSnapshot.val() || 1) - 1);
+    await set(reservedRef, currentReserved);
+    
+    setMessage(`✅ Ticket approved and activated.`);
+  } catch (err) {
+    console.error("Approve ticket error:", err);
+    setMessage(err.message || "Failed to approve ticket.", true);
+  }
+};
+
+window.rejectTicket = async function rejectTicket(contestantId, ticketId) {
+  if (!window.confirm("Are you sure you want to reject this ticket purchase?")) {
+    return;
+  }
+  
+  try {
+    // Delete the ticket
+    const ticketRef = ref(db, `eventTickets/${contestantId}/tickets/${ticketId}`);
+    await set(ticketRef, null);
+    
+    // Decrement reserved counter
+    const reservedRef = ref(db, `eventTickets/${contestantId}/reserved`);
+    const reservedSnapshot = await get(reservedRef);
+    const currentReserved = Math.max(0, (reservedSnapshot.val() || 1) - 1);
+    await set(reservedRef, currentReserved);
+    
+    setMessage(`❌ Ticket rejected and removed.`);
+  } catch (err) {
+    console.error("Reject ticket error:", err);
+    setMessage(err.message || "Failed to reject ticket.", true);
   }
 };
 

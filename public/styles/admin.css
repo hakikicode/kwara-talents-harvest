@@ -284,7 +284,8 @@ button:disabled {
 
 .admin-card,
 .payment-card,
-.tx-card {
+.tx-card,
+.ticket-card {
   background: rgba(15, 23, 42, 0.88);
   border: 1px solid rgba(148, 163, 184, 0.15);
   border-radius: 18px;
@@ -293,7 +294,8 @@ button:disabled {
 
 .admin-card h4,
 .payment-card h4,
-.tx-card h4 {
+.tx-card h4,
+.ticket-card h4 {
   margin-bottom: 8px;
 }
 
@@ -322,6 +324,24 @@ button:disabled {
 
 .status-rejected {
   color: #fecaca;
+}
+
+.detail-row {
+  background: rgba(100, 116, 139, 0.1);
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin: 8px 0;
+  font-size: 13px;
+  color: #cbd5e1;
+  word-break: break-all;
+}
+
+.detail-row code {
+  background: rgba(15, 23, 42, 0.6);
+  color: #e0e7ff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
 }
 
 .actions,

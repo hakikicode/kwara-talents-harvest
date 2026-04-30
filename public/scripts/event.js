@@ -325,10 +325,10 @@ window.payWithPaystack = async function () {
       amount: data.amount,
       ref: data.reference,
       currency: "NGN",
-      callback: async (response) => {
-        await handleTicketPaymentSuccess(response, email, name, phone, qty);
+      onSuccess: function(response) {
+        handleTicketPaymentSuccess(response, email, name, phone, qty);
       },
-      onClose: () => {
+      onClose: function() {
         showToast("Payment popup closed. You can try again.");
       }
     });
@@ -417,6 +417,71 @@ async function generateETicketPDF(ticketData) {
 }
 
 // Handle successful Paystack payment
+// Handle successful Paystack payment (called from inline popup)
+window.handleTicketPaymentSuccess = function(response) {
+  if (!response || !response.reference) {
+    alert("Payment reference not found. Please contact support.");
+    return;
+  }
+
+  const paymentData = JSON.parse(localStorage.getItem('paymentData') || '{}');
+  
+  if (!paymentData.email) {
+    alert("Payment data not found. Please try again.");
+    return;
+  }
+
+  // Show processing message while async work happens
+  showToast("✅ Processing your payment...");
+  
+  // Verify payment asynchronously in the background
+  fetch("/api/verify-payment", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ reference: response.reference })
+  })
+  .then(res => res.json())
+  .then(result => {
+    if (!result.success) {
+      throw new Error(result.error || "Payment verification failed");
+    }
+
+    // Save ticket to Firebase
+    return saveTicketPurchase(
+      paymentData.email, 
+      paymentData.name, 
+      paymentData.phone, 
+      paymentData.qty, 
+      response.reference, 
+      "pending"
+    );
+  })
+  .then(ticketDetails => {
+    const tableNumber = ticketDetails?.tableNumber || Math.floor(Math.random() * 100) + 1;
+    const ticketNumber = ticketDetails?.ticketCode || response.reference.substring(0, 12).toUpperCase();
+    
+    return generateETicketPDF({
+      name: paymentData.name,
+      email: paymentData.email,
+      ticketNumber,
+      contestantName: paymentData.contestantName,
+      tableNumber,
+      ticketQty: paymentData.qty,
+      totalAmount: paymentData.qty * TICKET_PRICE
+    });
+  })
+  .then(() => {
+    closeModal();
+    showToast("✅ Ticket generated! Code sent to email. Pending admin activation.");
+    // Clear payment data
+    localStorage.removeItem('paymentData');
+  })
+  .catch(error => {
+    console.error("Payment processing error:", error);
+    alert(`Error: ${error.message}`);
+  });
+};
+
 // Called when user returns from Paystack payment
 window.handlePaymentReturn = async function () {
   const urlParams = new URLSearchParams(window.location.search);
