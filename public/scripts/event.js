@@ -181,9 +181,14 @@ function renderTicketCard(contestant, id) {
         </div>
       </div>
       
-      <button class="btn-buy" id="btn-${id}" onclick="openTicketModal('${id}', '${contestant.name}')">
-        🎟️ Buy Ticket
-      </button>
+      <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+        <button class="btn-buy" id="btn-${id}" onclick="openTicketModal('${id}', '${contestant.name}')" style="flex: 1;">
+          🎟️ Buy Ticket
+        </button>
+        <button class="btn-share" onclick="shareContestant('${id}', '${contestant.name}')" title="Share">
+          📤
+        </button>
+      </div>
     </div>
   `;
 
@@ -644,3 +649,29 @@ document.addEventListener("DOMContentLoaded", () => {
     handlePaymentReturn();
   }
 });
+
+function shareContestant(id, name) {
+  const url = window.location.href;
+  const shareText = `Support ${name} at Kwara Talent Harvest! 🎉`;
+  
+  if (navigator.share) {
+    navigator.share({
+      title: 'Kwara Talent Harvest',
+      text: shareText,
+      url: url
+    }).catch(() => {
+      copyShareLink(url, shareText);
+    });
+  } else {
+    copyShareLink(url, shareText);
+  }
+}
+
+function copyShareLink(url, text) {
+  const fullText = `${text}\n${url}`;
+  navigator.clipboard.writeText(fullText).then(() => {
+    showToast('Share link copied to clipboard!');
+  }).catch(() => {
+    alert(`Share: ${text}\n${url}`);
+  });
+}

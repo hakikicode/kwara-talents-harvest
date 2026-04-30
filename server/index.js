@@ -84,10 +84,10 @@ app.post("/api/admin/login", (req, res) => {
   const { username, password } = req.body;
 
   if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-    return res.status(200).json({ message: "Login successful!", token: "admin-token" });
+    return res.status(200).json({ message: "Login successful!", token: "admin-token", username: ADMIN_USERNAME });
   }
 
-  res.status(401).json({ message: "Invalid credentials." });
+  res.status(401).json({ error: "Invalid credentials." });
 });
 
 // Fetch Registrations (Admin Only)
