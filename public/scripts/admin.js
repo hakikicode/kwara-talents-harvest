@@ -631,7 +631,7 @@ window.generateManualTickets = async function generateManualTickets() {
         name,
         phone,
         quantity: 1,
-        amount: 50,
+        amount: 5000,
         timestamp: Date.now(),
         status: "pending",
         adminApproved: false,
@@ -668,6 +668,120 @@ window.downloadManualTicketCodes = function downloadManualTicketCodes() {
   const link = document.createElement("a");
   link.href = url;
   link.download = "kth-generated-ticket-codes.txt";
+  link.click();
+  URL.revokeObjectURL(url);
+};
+
+window.generateBulkTickets = async function generateBulkTickets() {
+  const contestantIdsInput = document.getElementById("bulkContestantId").value.trim();
+  const quantityPerContestant = Number(document.getElementById("bulkQuantity").value) || 1;
+  const name = document.getElementById("bulkBuyerName").value.trim() || "Bulk Buyer";
+  const email = document.getElementById("bulkBuyerEmail").value.trim() || "bulk@example.com";
+  const phone = document.getElementById("bulkBuyerPhone").value.trim() || "0000000000";
+
+  if (!contestantIdsInput) {
+    setMessage("Enter contestant IDs (e.g., 1,2,3 or 1-5).", true);
+    return;
+  }
+
+  const contestantIds = parseContestantIds(contestantIdsInput);
+  if (contestantIds.length === 0) {
+    setMessage("Invalid contestant ID format.", true);
+    return;
+  }
+
+  if (quantityPerContestant < 1 || quantityPerContestant > 100) {
+    setMessage("Quantity must be between 1 and 100 per contestant.", true);
+    return;
+  }
+
+  const totalTickets = contestantIds.length * quantityPerContestant;
+  if (totalTickets > 500) {
+    setMessage("Maximum 500 tickets total. Reduce quantity or contestant range.", true);
+    return;
+  }
+
+  const generatedCodes = [];
+  let totalGenerated = 0;
+
+  try {
+    for (const contestantId of contestantIds) {
+      for (let i = 0; i < quantityPerContestant; i += 1) {
+        const ticketCode = `KTH-${contestantId}-${Date.now()}-${Math.floor(Math.random() * 9000) + 1000}`;
+        const ticketId = `${contestantId}-${Date.now()}-${Math.floor(Math.random() * 9000) + 1000}`;
+        const tableNumber = Math.floor(Math.random() * 100) + 1;
+        const ticketData = {
+          email,
+          name,
+          phone,
+          quantity: 1,
+          amount: 5000,
+          timestamp: Date.now(),
+          status: "pending",
+          adminApproved: false,
+          ticketCode,
+          tableNumber,
+          manual: true,
+          bulk: true
+        };
+
+        await set(ref(db, `eventTickets/${contestantId}/tickets/${ticketId}`), ticketData);
+        generatedCodes.push(ticketCode);
+        totalGenerated++;
+      }
+
+      await runTransaction(ref(db, `eventTickets/${contestantId}/reserved`), current => (current || 0) + quantityPerContestant);
+    }
+
+    lastGeneratedTicketCodes = generatedCodes;
+    document.getElementById("manualTicketOutput").value = generatedCodes.join("\n");
+    setMessage(`${totalGenerated} bulk ticket code(s) created across ${contestantIds.length} contestant(s).`);
+    loadEventTicketsData();
+  } catch (err) {
+    console.error("Generate bulk tickets error:", err);
+    setMessage("Failed to create bulk ticket codes.", true);
+  }
+};
+
+function parseContestantIds(input) {
+  const ids = new Set();
+
+  // Handle comma-separated values
+  const parts = input.split(',').map(p => p.trim());
+
+  for (const part of parts) {
+    if (part.includes('-')) {
+      // Handle ranges like "1-5"
+      const [start, end] = part.split('-').map(n => parseInt(n.trim()));
+      if (!isNaN(start) && !isNaN(end) && start <= end) {
+        for (let i = start; i <= end; i++) {
+          ids.add(i.toString());
+        }
+      }
+    } else {
+      // Handle single numbers
+      const num = parseInt(part);
+      if (!isNaN(num)) {
+        ids.add(num.toString());
+      }
+    }
+  }
+
+  return Array.from(ids).sort((a, b) => parseInt(a) - parseInt(b));
+}
+
+window.downloadBulkTicketCodes = function downloadBulkTicketCodes() {
+  if (!lastGeneratedTicketCodes.length) {
+    setMessage("Generate ticket codes first before downloading.", true);
+    return;
+  }
+
+  const content = lastGeneratedTicketCodes.join("\n");
+  const blob = new Blob([content], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `kth-bulk-tickets-${Date.now()}.txt`;
   link.click();
   URL.revokeObjectURL(url);
 };

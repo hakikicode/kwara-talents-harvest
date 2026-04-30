@@ -220,7 +220,36 @@ button:disabled {
 
 .manual-ticket-creator {
   display: grid;
+  gap: 16px;
+}
+
+.bulk-generator,
+.single-generator {
+  display: grid;
   gap: 12px;
+}
+
+.bulk-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.bulk-row input {
+  width: 100%;
+}
+
+.bulk-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.single-generator h4 {
+  margin: 0;
+  color: #e2e8f0;
+  font-size: 16px;
+  font-weight: 600;
 }
 
 .manual-ticket-creator input,

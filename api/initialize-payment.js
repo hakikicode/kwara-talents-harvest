@@ -74,7 +74,26 @@ export default async function handler(req, res) {
   }
 
   const subaccount = process.env.ECOBANK_SUBACCOUNT;
-  if (subaccount) {
+  const accessSubaccount = process.env.ACCESSBANK_SUBACCOUNT;
+  
+  if (subaccount && accessSubaccount) {
+    // Split transaction: 75% to Eco, 25% to Access
+    payload.split = {
+      type: "percentage",
+      bearer_type: "account",
+      subaccounts: [
+        {
+          subaccount: subaccount,
+          share: 75
+        },
+        {
+          subaccount: accessSubaccount,
+          share: 25
+        }
+      ]
+    };
+  } else if (subaccount) {
+    // Fallback to single subaccount if split not available
     payload.subaccount = subaccount;
     payload.transaction_charge = type === "event-ticket" ? 27500 : 27500;
     payload.bearer = "account";

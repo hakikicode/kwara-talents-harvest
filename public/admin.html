@@ -158,17 +158,35 @@
       <section class="glass section-panel">
         <div class="section-head">
           <h3>Generate Manual Ticket Codes</h3>
-          <p class="helper-text">Create offline ticket codes in Firebase and download them as TXT.</p>
+          <p class="helper-text">Create bulk offline ticket codes in Firebase and download them as TXT.</p>
         </div>
         <div class="manual-ticket-creator">
-          <input id="ticketContestantId" placeholder="Contestant ID">
-          <input id="ticketBuyerName" placeholder="Buyer Name">
-          <input id="ticketBuyerEmail" placeholder="Buyer Email">
-          <input id="ticketBuyerPhone" placeholder="Buyer Phone">
-          <input id="ticketQuantity" type="number" min="1" max="20" placeholder="Quantity">
-          <div class="manual-ticket-actions">
-            <button class="primary-button" onclick="generateManualTickets()">Generate Ticket Codes</button>
-            <button class="ghost-button" onclick="downloadManualTicketCodes()">Download TXT</button>
+          <div class="bulk-generator">
+            <div class="bulk-row">
+              <input id="bulkContestantId" placeholder="Contestant ID (e.g., 1,2,3 or 1-5)">
+              <input id="bulkQuantity" type="number" min="1" max="100" placeholder="Tickets per contestant">
+            </div>
+            <div class="bulk-row">
+              <input id="bulkBuyerName" placeholder="Buyer Name (optional)">
+              <input id="bulkBuyerEmail" placeholder="Buyer Email (optional)">
+              <input id="bulkBuyerPhone" placeholder="Buyer Phone (optional)">
+            </div>
+            <div class="bulk-actions">
+              <button class="primary-button" onclick="generateBulkTickets()">Generate Bulk Codes</button>
+              <button class="ghost-button" onclick="downloadBulkTicketCodes()">Download TXT</button>
+            </div>
+          </div>
+          <hr>
+          <div class="single-generator">
+            <h4>Single Ticket Generation</h4>
+            <input id="ticketContestantId" placeholder="Contestant ID">
+            <input id="ticketBuyerName" placeholder="Buyer Name">
+            <input id="ticketBuyerEmail" placeholder="Buyer Email">
+            <input id="ticketBuyerPhone" placeholder="Buyer Phone">
+            <input id="ticketQuantity" type="number" min="1" max="20" placeholder="Quantity">
+            <div class="manual-ticket-actions">
+              <button class="primary-button" onclick="generateManualTickets()">Generate Single Codes</button>
+            </div>
           </div>
           <textarea id="manualTicketOutput" readonly placeholder="Generated ticket codes will appear here"></textarea>
         </div>
