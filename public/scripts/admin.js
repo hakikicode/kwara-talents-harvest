@@ -55,6 +55,7 @@ let contestantData = {};
 let manualPaymentsData = {};
 let transactionsData = {};
 let eventTicketsData = {};
+let lastGeneratedTicketCodes = [];
 const loadedSections = {
   contestants: false,
   manualPayments: false,
