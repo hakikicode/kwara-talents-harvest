@@ -64,7 +64,6 @@ const loadedSections = {
   transactions: false,
   eventTickets: false
 };
-let lastGeneratedTicketCodes = [];
 let zeroVoteFilterActive = false;
 let zeroVoteSearchTerm = "";
 

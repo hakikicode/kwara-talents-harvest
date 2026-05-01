@@ -303,7 +303,7 @@ window.payWithPaystack = async function () {
     }));
 
     // Initialize payment via backend
-    const res = await fetch("/api/initialize-payment", {
+    const res = await fetch("https://kth-backend.vercel.app/api/initialize-payment", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -439,7 +439,7 @@ window.handleTicketPaymentSuccess = function(response) {
   showToast("✅ Processing your payment...");
   
   // Verify payment asynchronously in the background
-  fetch("/api/verify-payment", {
+  fetch("https://kth-backend.vercel.app/api/verify-payment", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ reference: response.reference })
@@ -498,7 +498,7 @@ window.handlePaymentReturn = async function () {
 
   try {
     // Verify payment with backend
-    const verify = await fetch("/api/verify-payment", {
+    const verify = await fetch("https://kth-backend.vercel.app/api/verify-payment", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ reference })
