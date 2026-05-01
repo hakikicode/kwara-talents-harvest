@@ -78,16 +78,20 @@ export default async function handler(req, res) {
   
   if (subaccount && accessSubaccount) {
     // Split transaction: 75% to Eco, 25% to Access
-    payload.split = JSON.stringify([
-      {
-        subaccount: subaccount,
-        share: 75
-      },
-      {
-        subaccount: accessSubaccount,
-        share: 25
-      }
-    ]);
+    payload.split = {
+      type: "percentage",
+      bearer_type: "account",
+      subaccounts: [
+        {
+          subaccount: subaccount,
+          share: 75
+        },
+        {
+          subaccount: accessSubaccount,
+          share: 25
+        }
+      ]
+    };
   } else if (subaccount) {
     // Fallback to single subaccount if split not available
     payload.subaccount = subaccount;

@@ -96,20 +96,26 @@
   <script>
     const params = new URLSearchParams(window.location.search);
     const contestantId = params.get("contestantId");
+    const contestantName = params.get("contestantName") || contestantId;
+    const queryTicketQty = params.get("ticketQty");
     const votes = Number(params.get("votes") || "0");
-    const amount = votes * 350;
+    const ticketQty = Number(queryTicketQty || votes || "0");
+    const amount = Number(params.get("amount") || ticketQty * 50 || votes * 350);
+    const paymentType = params.get("type") || (queryTicketQty ? "event-ticket" : "vote");
 
     const amountInput = document.getElementById("amount");
     const summaryEl = document.getElementById("manualSummary");
     const submitBtn = document.getElementById("submitBtn");
 
-    amountInput.value = amount > 0 ? `NGN ${amount}` : "";
+    amountInput.value = amount > 0 ? `NGN ${amount.toLocaleString()}` : "";
 
-    if (!contestantId || votes <= 0) {
-      summaryEl.textContent = "Buy Ticket to support your favourite contestant. Pay Send prove and get ticket approved within 24hrs.";
+    if (!contestantId || ticketQty <= 0) {
+      summaryEl.textContent = "Buy a ticket or vote for your favourite contestant, then upload proof for approval.";
       submitBtn.disabled = true;
     } else {
-      summaryEl.textContent = `Contestant: ${contestantId} | Votes: ${votes}`;
+      summaryEl.textContent = paymentType === "event-ticket"
+        ? `Contestant: ${contestantName} | Tickets: ${ticketQty}`
+        : `Contestant: ${contestantName} | Votes: ${ticketQty}`;
     }
 
     async function submitProof() {
@@ -141,10 +147,16 @@
             },
             body: JSON.stringify({
               contestantId,
-              votes,
+              contestantName,
+              ticketQty,
+              votes: ticketQty,
+              amount,
               payer,
               reference,
-              proof: reader.result
+              proof: reader.result,
+              email: params.get("email") || "",
+              phone: params.get("phone") || "",
+              type: paymentType
             })
           });
 

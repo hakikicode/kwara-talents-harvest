@@ -163,6 +163,16 @@ function renderTicketCard(contestant, id) {
            fetchpriority="low">
       <div class="ticket-overlay">
         <span class="ticket-badge">🎟️ Grand Finale</span>
+        <div class="overlay-stats">
+          <div class="overlay-stat">
+            <span class="overlay-stat-label">Price</span>
+            <span class="overlay-stat-value">₦${TICKET_PRICE.toLocaleString()}</span>
+          </div>
+          <div class="overlay-stat">
+            <span class="overlay-stat-label">Available</span>
+            <span class="overlay-stat-value" id="tickets-${id}">Loading...</span>
+          </div>
+        </div>
       </div>
     </div>
     
@@ -170,24 +180,17 @@ function renderTicketCard(contestant, id) {
       <h3>${contestant.name}</h3>
       <p class="description">Support this talent at the live event</p>
       
-      <div class="ticket-stats">
-        <div class="stat">
-          <span class="stat-label">Price</span>
-          <span class="stat-value">₦${TICKET_PRICE.toLocaleString()}</span>
-        </div>
-        <div class="stat">
-          <span class="stat-label">Available</span>
-          <span class="stat-value" id="tickets-${id}">Loading...</span>
-        </div>
-      </div>
-      
-      <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+      <div class="card-actions">
         <button class="btn-buy" id="btn-${id}" onclick="openTicketModal('${id}', '${contestant.name}')" style="flex: 1;">
           🎟️ Buy Ticket
         </button>
-        <button class="btn-share" onclick="shareContestant('${id}', '${contestant.name}')" title="Share">
-          📤
-        </button>
+        <div class="social-share">
+          <button class="social-btn whatsapp" onclick="shareContestant('${id}', '${contestant.name}', 'whatsapp')" title="Share on WhatsApp">📱</button>
+          <button class="social-btn facebook" onclick="shareContestant('${id}', '${contestant.name}', 'facebook')" title="Share on Facebook">📘</button>
+          <button class="social-btn instagram" onclick="shareContestant('${id}', '${contestant.name}', 'instagram')" title="Share on Instagram">📷</button>
+          <button class="social-btn tiktok" onclick="shareContestant('${id}', '${contestant.name}', 'tiktok')" title="Share on TikTok">🎵</button>
+          <button class="social-btn twitter" onclick="shareContestant('${id}', '${contestant.name}', 'twitter')" title="Share on X">🐦</button>
+        </div>
       </div>
     </div>
   `;
@@ -303,7 +306,7 @@ window.payWithPaystack = async function () {
     }));
 
     // Initialize payment via backend
-    const res = await fetch("https://kth-backend.vercel.app/api/initialize-payment", {
+    const res = await fetch("/api/initialize-payment", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -439,7 +442,7 @@ window.handleTicketPaymentSuccess = function(response) {
   showToast("✅ Processing your payment...");
   
   // Verify payment asynchronously in the background
-  fetch("https://kth-backend.vercel.app/api/verify-payment", {
+  fetch("/api/verify-payment", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ reference: response.reference })
@@ -498,7 +501,7 @@ window.handlePaymentReturn = async function () {
 
   try {
     // Verify payment with backend
-    const verify = await fetch("https://kth-backend.vercel.app/api/verify-payment", {
+    const verify = await fetch("/api/verify-payment", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ reference })
@@ -542,34 +545,59 @@ window.handlePaymentReturn = async function () {
   }
 };
 
-// Manual payment handler
-window.payManual = function () {
-  const email = document.getElementById("ticketEmail").value.trim();
-  const name = document.getElementById("ticketName").value.trim();
-  const phone = document.getElementById("ticketPhone").value.trim();
-  const qty = parseInt(document.getElementById("ticketQty").value) || 1;
-
-  if (!email || !name || !phone) {
-    showToast("❌ Please fill in all fields");
-    return;
+// Social media sharing function
+window.shareContestant = function (contestantId, contestantName, platform) {
+  const baseUrl = window.location.origin;
+  const eventUrl = `${baseUrl}/event.html`;
+  const shareText = `Support ${contestantName} at the Kwara Talent Harvest Grand Finale! 🎟️ Get your tickets now: ${eventUrl}`;
+  
+  let shareUrl = '';
+  
+  switch (platform) {
+    case 'whatsapp':
+      shareUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+      break;
+    case 'facebook':
+      shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(eventUrl)}&quote=${encodeURIComponent(shareText)}`;
+      break;
+    case 'instagram':
+      // Instagram doesn't support direct sharing via URL, so we'll copy to clipboard
+      navigator.clipboard.writeText(shareText).then(() => {
+        showToast("✅ Link copied! Share on Instagram");
+      }).catch(() => {
+        showToast("❌ Failed to copy link");
+      });
+      return;
+    case 'tiktok':
+      // TikTok doesn't support direct sharing via URL, so we'll copy to clipboard
+      navigator.clipboard.writeText(shareText).then(() => {
+        showToast("✅ Link copied! Share on TikTok");
+      }).catch(() => {
+        showToast("❌ Failed to copy link");
+      });
+      return;
+    case 'twitter':
+      shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
+      break;
+    default:
+      // Fallback to general share
+      if (navigator.share) {
+        navigator.share({
+          title: `Support ${contestantName}`,
+          text: shareText,
+          url: eventUrl
+        });
+      } else {
+        navigator.clipboard.writeText(shareText).then(() => {
+          showToast("✅ Link copied to clipboard!");
+        });
+      }
+      return;
   }
-
-  // Save to localStorage
-  localStorage.setItem("user_email", email);
-
-  // Redirect to manual payment with event details
-  const params = new URLSearchParams({
-    type: "event-ticket",
-    contestantId: selectedContestant.id,
-    contestantName: selectedContestant.name,
-    ticketQty: qty,
-    amount: qty * TICKET_PRICE,
-    email: email,
-    name: name,
-    phone: phone
-  });
-
-  location.href = `./manual-payment.html?${params.toString()}`;
+  
+  if (shareUrl) {
+    window.open(shareUrl, '_blank', 'width=600,height=400');
+  }
 };
 
 // Save ticket purchase to Firebase

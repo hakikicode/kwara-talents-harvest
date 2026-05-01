@@ -5,12 +5,27 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { contestantId, votes, payer, reference, proof } = req.body || {};
-  const voteCount = Number(votes);
+  const {
+    contestantId,
+    contestantName,
+    ticketQty,
+    votes,
+    amount,
+    payer,
+    reference,
+    proof,
+    email,
+    phone,
+    type
+  } = req.body || {};
 
-  if (!contestantId || !voteCount || !payer || !reference || !proof) {
+  const paymentType = type || (ticketQty ? "event-ticket" : "vote");
+  const quantity = Number(ticketQty || votes || 0);
+  const amountValue = Number(amount);
+
+  if (!contestantId || quantity <= 0 || !amountValue || !payer || !reference || !proof) {
     return res.status(400).json({
-      error: "Missing fields (contestantId, votes, payer, reference, proof required)"
+      error: "Missing fields (contestantId, quantity, amount, payer, reference, proof required)"
     });
   }
 
@@ -19,10 +34,16 @@ export default async function handler(req, res) {
 
     await db.ref(`manual_payments/${id}`).set({
       contestantId,
-      votes: voteCount,
+      contestantName: contestantName || contestantId,
+      type: paymentType,
+      ticketQty: Number(ticketQty || 0),
+      votes: Number(votes || 0),
+      amount: amountValue,
       payer,
       reference,
       proof,
+      email: email || null,
+      phone: phone || null,
       status: "pending",
       created_at: Date.now()
     });
