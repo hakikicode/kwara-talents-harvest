@@ -154,7 +154,7 @@ function renderTicketCard(contestant, id) {
     : `events/${encodeURI(`kth ${id}.jpg`)}`;
 
   card.innerHTML = `
-    <div class="ticket-img-wrapper">
+    <div class="ticket-img-wrapper" onclick="expandImage(this)">
       <img src="${imageUrl}" 
            class="contestant-img"
            alt="${contestant.name}"
@@ -165,7 +165,7 @@ function renderTicketCard(contestant, id) {
         <span class="ticket-badge">🎟️ Grand Finale</span>
         <div class="overlay-stats">
           <div class="overlay-stat">
-            <span class="overlay-stat-label">Price</span>
+            <span class="overlay-stat-label">Amount</span>
             <span class="overlay-stat-value">₦${TICKET_PRICE.toLocaleString()}</span>
           </div>
           <div class="overlay-stat">
@@ -177,11 +177,13 @@ function renderTicketCard(contestant, id) {
     </div>
     
     <div class="ticket-info">
-      <h3>${contestant.name}</h3>
-      <p class="description">Support this talent at the live event</p>
+      <div class="ticket-header">
+        <h3>${contestant.name}</h3>
+        <p class="description">Support this talent at the live event</p>
+      </div>
       
       <div class="card-actions">
-        <button class="btn-buy" id="btn-${id}" onclick="openTicketModal('${id}', '${contestant.name}')" style="flex: 1;">
+        <button class="btn-buy" id="btn-${id}" onclick="openTicketModal('${id}', '${contestant.name}')">
           🎟️ Buy Ticket
         </button>
         <div class="social-share">
@@ -598,6 +600,11 @@ window.shareContestant = function (contestantId, contestantName, platform) {
   if (shareUrl) {
     window.open(shareUrl, '_blank', 'width=600,height=400');
   }
+};
+
+// Expand image on click
+window.expandImage = function (wrapper) {
+  wrapper.classList.toggle('expanded');
 };
 
 // Save ticket purchase to Firebase
