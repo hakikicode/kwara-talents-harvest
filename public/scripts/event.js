@@ -1,4 +1,4 @@
-const TICKET_PRICE = 50;
+const TICKET_PRICE = 5000;
 const MAX_TICKETS_PER_CONTESTANT = 20;
 const EVENT_DATE = new Date("2026-05-15T18:00:00+01:00");
 
@@ -347,6 +347,51 @@ window.payWithPaystack = async function () {
     console.error("Payment error:", error);
     alert(`Payment Error: ${error.message}`);
   }
+};
+
+// Manual payment redirect handler
+window.payManual = function () {
+  if (!selectedContestant || !selectedContestant.id) {
+    alert("Please select a contestant first");
+    return;
+  }
+
+  const email = document.getElementById("ticketEmail").value.trim();
+  const name = document.getElementById("ticketName").value.trim();
+  const phone = document.getElementById("ticketPhone").value.trim();
+  const qty = parseInt(document.getElementById("ticketQty").value) || 1;
+
+  if (!email || !name || !phone) {
+    alert("Please fill in all fields");
+    return;
+  }
+
+  if (qty > 5) {
+    alert("Maximum 5 tickets per transaction");
+    return;
+  }
+
+  localStorage.setItem("paymentData", JSON.stringify({
+    email,
+    name,
+    phone,
+    qty,
+    contestantId: selectedContestant.id,
+    contestantName: selectedContestant.name
+  }));
+
+  const params = new URLSearchParams({
+    type: "event-ticket",
+    contestantId: selectedContestant.id,
+    contestantName: selectedContestant.name,
+    ticketQty: qty,
+    amount: qty * TICKET_PRICE,
+    email,
+    name,
+    phone
+  });
+
+  window.location.href = `./manual-payment.html?${params.toString()}`;
 };
 
 // Generate PDF e-ticket

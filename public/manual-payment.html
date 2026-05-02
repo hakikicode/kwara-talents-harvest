@@ -97,16 +97,26 @@
     const params = new URLSearchParams(window.location.search);
     const contestantId = params.get("contestantId");
     const contestantName = params.get("contestantName") || contestantId;
+    const TICKET_PRICE = 5000;
+    const VOTE_PRICE = 350;
     const queryTicketQty = params.get("ticketQty");
     const votes = Number(params.get("votes") || "0");
     const ticketQty = Number(queryTicketQty || "0");
     const paymentType = params.get("type") || (queryTicketQty ? "event-ticket" : "vote");
     const quantity = ticketQty > 0 ? ticketQty : votes;
-    const amount = Number(params.get("amount") || (paymentType === "event-ticket" ? ticketQty * 50 : votes * 350) || 0);
+
+    const savedPaymentData = JSON.parse(localStorage.getItem("paymentData") || "{}");
+    const defaultEmail = params.get("email") || savedPaymentData.email || "";
+    const defaultName = params.get("name") || savedPaymentData.name || "";
+    const defaultPhone = params.get("phone") || savedPaymentData.phone || "";
+
+    const amount = Number(params.get("amount") || (paymentType === "event-ticket" ? ticketQty * TICKET_PRICE : votes * VOTE_PRICE) || 0);
 
     const amountInput = document.getElementById("amount");
     const summaryEl = document.getElementById("manualSummary");
     const submitBtn = document.getElementById("submitBtn");
+
+    document.getElementById("payer").value = defaultName;
 
     amountInput.value = amount > 0 ? `NGN ${amount.toLocaleString()}` : "";
 
@@ -155,8 +165,8 @@
               payer,
               reference,
               proof: reader.result,
-              email: params.get("email") || "",
-              phone: params.get("phone") || "",
+              email: defaultEmail,
+              phone: defaultPhone,
               type: paymentType
             })
           });
