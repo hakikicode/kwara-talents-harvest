@@ -184,14 +184,14 @@ function renderTicketCard(contestant, id) {
             🎟️ Buy Ticket
           </button>
         </div>
-        <div class="social-share bottom-share">
-          <button class="social-btn share" onclick="event.stopPropagation(); shareContestant('${id}', '${contestant.name}', 'default')" title="Share">📤</button>
-          <button class="social-btn whatsapp" onclick="event.stopPropagation(); shareContestant('${id}', '${contestant.name}', 'whatsapp')" title="WhatsApp">📱</button>
-          <button class="social-btn facebook" onclick="event.stopPropagation(); shareContestant('${id}', '${contestant.name}', 'facebook')" title="Facebook">📘</button>
-          <button class="social-btn instagram" onclick="event.stopPropagation(); shareContestant('${id}', '${contestant.name}', 'instagram')" title="Instagram">📷</button>
-          <button class="social-btn tiktok" onclick="event.stopPropagation(); shareContestant('${id}', '${contestant.name}', 'tiktok')" title="TikTok">🎵</button>
-          <button class="social-btn twitter" onclick="event.stopPropagation(); shareContestant('${id}', '${contestant.name}', 'twitter')" title="X">🐦</button>
-        </div>
+        <div class="social-share">
+            <button class="social-btn share" onclick="event.stopPropagation(); shareContestant('${id}', '${contestant.name}', 'default')" title="Share">📢</button>
+            <button class="social-btn whatsapp" onclick="event.stopPropagation(); shareContestant('${id}', '${contestant.name}', 'whatsapp')" title="WhatsApp">✆</button>
+            <button class="social-btn facebook" onclick="event.stopPropagation(); shareContestant('${id}', '${contestant.name}', 'facebook')" title="Facebook">ⓕ</button>
+            <button class="social-btn instagram" onclick="event.stopPropagation(); shareContestant('${id}', '${contestant.name}', 'instagram')" title="Instagram">🅾</button>
+            <button class="social-btn tiktok" onclick="event.stopPropagation(); shareContestant('${id}', '${contestant.name}', 'tiktok')" title="TikTok">【ꚠ】</button>
+            <button class="social-btn twitter" onclick="event.stopPropagation(); shareContestant('${id}', '${contestant.name}', 'twitter')" title="X">𝕏</button>
+          </div>
       </div>
     </div>
   `;
