@@ -11,6 +11,58 @@
     ],
     "rewrites": [
       {
+        "source": "/event",
+        "destination": "/event.html"
+      },
+      {
+        "source": "/events",
+        "destination": "/event.html"
+      },
+      {
+        "source": "/vote",
+        "destination": "/vote.html"
+      },
+      {
+        "source": "/register",
+        "destination": "/register.html"
+      },
+      {
+        "source": "/admin",
+        "destination": "/admin.html"
+      },
+      {
+        "source": "/admin-dashboard",
+        "destination": "/admin-dashboard.html"
+      },
+      {
+        "source": "/manual-payment",
+        "destination": "/manual-payment.html"
+      },
+      {
+        "source": "/ticket-status",
+        "destination": "/ticket-status.html"
+      },
+      {
+        "source": "/count",
+        "destination": "/count.html"
+      },
+      {
+        "source": "/success",
+        "destination": "/success.html"
+      },
+      {
+        "source": "/thank-you",
+        "destination": "/thank-you.html"
+      },
+      {
+        "source": "/thanks",
+        "destination": "/thanks.html"
+      },
+      {
+        "source": "/contestant",
+        "destination": "/contestant.html"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

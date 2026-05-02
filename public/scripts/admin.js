@@ -604,7 +604,10 @@ window.addVotes = async function addVotes(id) {
 window.approvePayment = async function approvePayment(id) {
   try {
     await apiPost("/api/approve-payment", { id });
-    setMessage("Manual payment approved and votes credited.");
+    setMessage("Manual payment approved and event ticket created.");
+    // Reload event tickets to show the newly created ticket
+    loadEventTicketsData();
+    renderManualPayments();
   } catch (err) {
     setMessage(err.message, true);
   }
