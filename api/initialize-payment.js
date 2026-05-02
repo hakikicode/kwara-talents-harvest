@@ -74,26 +74,13 @@ export default async function handler(req, res) {
   }
 
   const subaccount = process.env.ECOBANK_SUBACCOUNT;
-  const accessSubaccount = process.env.ACCESSBANK_SUBACCOUNT;
-  
-  if (subaccount && accessSubaccount) {
-    // Split transaction: 75% to Eco, 25% to Access
-    payload.split = {
-      type: "percentage",
-      bearer_type: "account",
-      subaccounts: [
-        {
-          subaccount: subaccount,
-          share: 75
-        },
-        {
-          subaccount: accessSubaccount,
-          share: 25
-        }
-      ]
-    };
+  const splitCode = process.env.PAYSTACK_SPLIT_CODE || process.env.PAYSTACK_DEFAULT_SPLIT;
+
+  if (splitCode) {
+    // Use a configured Paystack split code instead of inline split object
+    payload.split_code = splitCode;
   } else if (subaccount) {
-    // Fallback to single subaccount if split not available
+    // Fallback to single subaccount when split code is not configured
     payload.subaccount = subaccount;
     payload.bearer = "account";
   }

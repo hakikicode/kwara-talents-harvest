@@ -26,18 +26,42 @@ export default async function handler(req, res) {
     }
 
     const data = snap.val();
+    const contestantId = data.contestantId;
+    const paymentType = data.type || (data.ticketQty ? "event-ticket" : "vote");
 
     // ✅ prevent double approval
     if (data.status === "approved") {
       return res.json({ success: true });
     }
 
-    const contestantId = data.contestantId;
-    const votes = Number(data.votes || 1);
+    if (paymentType === "event-ticket") {
+      const ticketQty = Number(data.ticketQty || 1);
+      const amount = Number(data.amount || 0);
+      const ticketCode = `KTH-${contestantId}-${Date.now()}-${Math.floor(Math.random() * 9000) + 1000}`;
+      const ticketId = `${contestantId}-${Date.now()}`;
+      const tableNumber = Math.floor(Math.random() * 100) + 1;
 
-    // ✅ ADD VOTES
-    await db.ref(`contestants/${contestantId}/votes`)
-      .transaction(v => (v || 0) + votes);
+      await db.ref(`eventTickets/${contestantId}/tickets/${ticketId}`).set({
+        email: data.email || null,
+        name: data.payer || "Manual Payment",
+        phone: data.phone || null,
+        quantity: ticketQty,
+        amount,
+        timestamp: Date.now(),
+        status: "pending",
+        adminApproved: false,
+        ticketCode,
+        tableNumber,
+        manual: true,
+        paymentRef: data.reference
+      });
+
+      await db.ref(`eventTickets/${contestantId}/reserved`).transaction(v => (v || 0) + ticketQty);
+    } else {
+      const votes = Number(data.votes || 1);
+      await db.ref(`contestants/${contestantId}/votes`)
+        .transaction(v => (v || 0) + votes);
+    }
 
     // ✅ UPDATE STATUS
     await refPay.update({

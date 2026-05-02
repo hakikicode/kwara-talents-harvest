@@ -99,9 +99,10 @@
     const contestantName = params.get("contestantName") || contestantId;
     const queryTicketQty = params.get("ticketQty");
     const votes = Number(params.get("votes") || "0");
-    const ticketQty = Number(queryTicketQty || votes || "0");
-    const amount = Number(params.get("amount") || ticketQty * 50 || votes * 350);
+    const ticketQty = Number(queryTicketQty || "0");
     const paymentType = params.get("type") || (queryTicketQty ? "event-ticket" : "vote");
+    const quantity = ticketQty > 0 ? ticketQty : votes;
+    const amount = Number(params.get("amount") || (paymentType === "event-ticket" ? ticketQty * 50 : votes * 350) || 0);
 
     const amountInput = document.getElementById("amount");
     const summaryEl = document.getElementById("manualSummary");
@@ -109,13 +110,13 @@
 
     amountInput.value = amount > 0 ? `NGN ${amount.toLocaleString()}` : "";
 
-    if (!contestantId || ticketQty <= 0) {
+    if (!contestantId || quantity <= 0) {
       summaryEl.textContent = "Buy a ticket or vote for your favourite contestant, then upload proof for approval.";
       submitBtn.disabled = true;
     } else {
       summaryEl.textContent = paymentType === "event-ticket"
-        ? `Contestant: ${contestantName} | Tickets: ${ticketQty}`
-        : `Contestant: ${contestantName} | Votes: ${ticketQty}`;
+        ? `Contestant: ${contestantName} | Tickets: ${quantity}`
+        : `Contestant: ${contestantName} | Votes: ${quantity}`;
     }
 
     async function submitProof() {
@@ -123,8 +124,8 @@
       const reference = document.getElementById("reference").value.trim();
       const file = document.getElementById("proof").files[0];
 
-      if (!contestantId || votes <= 0) {
-        alert("Missing contestant or vote count.");
+      if (!contestantId || quantity <= 0) {
+        alert("Missing contestant or ticket/vote quantity.");
         return;
       }
 
@@ -148,8 +149,8 @@
             body: JSON.stringify({
               contestantId,
               contestantName,
-              ticketQty,
-              votes: ticketQty,
+              ticketQty: ticketQty > 0 ? ticketQty : undefined,
+              votes: votes > 0 ? votes : undefined,
               amount,
               payer,
               reference,
@@ -167,7 +168,7 @@
           }
 
           alert("Submitted! Await approval.");
-          window.location.href = "/vote.html";
+          window.location.href = paymentType === "event-ticket" ? "/event.html" : "/vote.html";
         } catch (err) {
           alert(err.message || "Failed to submit payment.");
           submitBtn.disabled = false;

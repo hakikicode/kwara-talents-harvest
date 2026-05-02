@@ -162,36 +162,35 @@ function renderTicketCard(contestant, id) {
            decoding="async"
            fetchpriority="low">
       <div class="ticket-overlay">
-        <span class="ticket-badge">🎟️ Grand Finale</span>
-        <div class="overlay-stats">
-          <div class="overlay-stat">
-            <span class="overlay-stat-label">Amount</span>
-            <span class="overlay-stat-value">₦${TICKET_PRICE.toLocaleString()}</span>
-          </div>
-          <div class="overlay-stat">
-            <span class="overlay-stat-label">Available</span>
-            <span class="overlay-stat-value" id="tickets-${id}">Loading...</span>
+        <div class="overlay-top">
+          <span class="ticket-badge"> 🎟️ Grand Finale</span>
+        </div>
+        <div class="overlay-center">
+          <h3>${contestant.name}</h3>
+          <p class="description">Support this talent at the live event</p>
+          <div class="center-stats">
+            <div class="overlay-stat">
+              <span class="overlay-stat-label">Amount</span>
+              <span class="overlay-stat-value">₦${TICKET_PRICE.toLocaleString()}</span>
+            </div>
+            <div class="overlay-stat">
+              <span class="overlay-stat-label">Available</span>
+              <span class="overlay-stat-value" id="tickets-${id}">Loading...</span>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-    
-    <div class="ticket-info">
-      <div class="ticket-header">
-        <h3>${contestant.name}</h3>
-        <p class="description">Support this talent at the live event</p>
-      </div>
-      
-      <div class="card-actions">
-        <button class="btn-buy" id="btn-${id}" onclick="openTicketModal('${id}', '${contestant.name}')">
-          🎟️ Buy Ticket
-        </button>
-        <div class="social-share">
-          <button class="social-btn whatsapp" onclick="shareContestant('${id}', '${contestant.name}', 'whatsapp')" title="Share on WhatsApp">📱</button>
-          <button class="social-btn facebook" onclick="shareContestant('${id}', '${contestant.name}', 'facebook')" title="Share on Facebook">📘</button>
-          <button class="social-btn instagram" onclick="shareContestant('${id}', '${contestant.name}', 'instagram')" title="Share on Instagram">📷</button>
-          <button class="social-btn tiktok" onclick="shareContestant('${id}', '${contestant.name}', 'tiktok')" title="Share on TikTok">🎵</button>
-          <button class="social-btn twitter" onclick="shareContestant('${id}', '${contestant.name}', 'twitter')" title="Share on X">🐦</button>
+        <div class="overlay-actions">
+          <button class="btn-buy" id="btn-${id}" onclick="event.stopPropagation(); openTicketModal('${id}', '${contestant.name}')">
+            🎟️ Buy Ticket
+          </button>
+        </div>
+        <div class="social-share bottom-share">
+          <button class="social-btn share" onclick="event.stopPropagation(); shareContestant('${id}', '${contestant.name}', 'default')" title="Share">📤</button>
+          <button class="social-btn whatsapp" onclick="event.stopPropagation(); shareContestant('${id}', '${contestant.name}', 'whatsapp')" title="WhatsApp">📱</button>
+          <button class="social-btn facebook" onclick="event.stopPropagation(); shareContestant('${id}', '${contestant.name}', 'facebook')" title="Facebook">📘</button>
+          <button class="social-btn instagram" onclick="event.stopPropagation(); shareContestant('${id}', '${contestant.name}', 'instagram')" title="Instagram">📷</button>
+          <button class="social-btn tiktok" onclick="event.stopPropagation(); shareContestant('${id}', '${contestant.name}', 'tiktok')" title="TikTok">🎵</button>
+          <button class="social-btn twitter" onclick="event.stopPropagation(); shareContestant('${id}', '${contestant.name}', 'twitter')" title="X">🐦</button>
         </div>
       </div>
     </div>
@@ -385,7 +384,7 @@ async function generateETicketPDF(ticketData) {
           </tr>
           <tr style="border-top: 1px solid #22c55e;">
             <td style="padding: 15px 0;"><strong>Event Date:</strong></td>
-            <td style="padding: 15px 0; color: #4ade80;">May 15, 2026 @ 6:00 PM</td>
+            <td style="padding: 15px 0; color: #4ade80;">May 16, 2026 @ 2:00 PM</td>
             <td style="padding: 15px 0;"><strong>Amount Paid:</strong></td>
             <td style="padding: 15px 0; color: #4ade80; font-weight: bold; font-size: 18px;">₦${totalAmount.toLocaleString()}</td>
           </tr>

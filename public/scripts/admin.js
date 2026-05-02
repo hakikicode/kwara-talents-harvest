@@ -324,9 +324,10 @@ function renderManualPayments() {
   manualPaymentsList.innerHTML = filtered.map(([id, payment]) => `
     <article class="payment-card">
       <h4>${payment.payer || "Unknown payer"}</h4>
-      <p class="meta-line">Contestant: ${payment.contestantId || "N/A"} | Votes: ${payment.votes || 0}</p>
+      <p class="meta-line">Contestant: ${payment.contestantId || "N/A"} | ${payment.type === "event-ticket" ? `Tickets: ${payment.ticketQty || 0}` : `Votes: ${payment.votes || 0}`} | Amount: ₦${Number(payment.amount || 0).toLocaleString()}</p>
       <div class="card-meta">
         <span class="mini-pill ${statusClass(payment.status || "pending")}">${payment.status || "pending"}</span>
+        <span class="mini-pill">${payment.type || "manual"}</span>
         <span class="mini-pill">Ref: ${payment.reference || "N/A"}</span>
         <span class="mini-pill">${formatDate(payment.created_at)}</span>
       </div>
@@ -539,10 +540,14 @@ window.openPaymentModal = function openPaymentModal(id) {
     <p><b>ID:</b> ${id}</p>
     <p><b>Payer:</b> ${payment.payer || "N/A"}</p>
     <p><b>Contestant:</b> ${payment.contestantId || "N/A"}</p>
-    <p><b>Votes:</b> ${payment.votes || 0}</p>
+    <p><b>Type:</b> ${payment.type || "manual"}</p>
+    ${payment.type === "event-ticket" ? `<p><b>Tickets:</b> ${payment.ticketQty || 0}</p>` : `<p><b>Votes:</b> ${payment.votes || 0}</p>`}
+    <p><b>Amount:</b> ₦${Number(payment.amount || 0).toLocaleString()}</p>
     <p><b>Reference:</b> ${payment.reference || "N/A"}</p>
     <p><b>Status:</b> ${payment.status || "pending"}</p>
     <p><b>Submitted:</b> ${formatDate(payment.created_at)}</p>
+    ${payment.email ? `<p><b>Email:</b> ${payment.email}</p>` : ""}
+    ${payment.phone ? `<p><b>Phone:</b> ${payment.phone}</p>` : ""}
     ${payment.proof ? `<img class="proof-preview" src="${payment.proof}" alt="Payment proof">` : "<p>No proof uploaded.</p>"}
   `;
 };

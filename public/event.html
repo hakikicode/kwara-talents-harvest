@@ -83,12 +83,11 @@
       position: relative;
       border-radius: 14px;
       overflow: hidden;
-      height: 320px;
+      min-height: 340px;
       transition: transform 0.25s ease, box-shadow 0.25s ease;
       box-shadow: 0 12px 28px rgba(0, 0, 0, 0.24);
-      background: #09121f;
-      display: flex;
-      flex-direction: column;
+      background: transparent;
+      display: block;
     }
 
     .ticket-card:hover {
@@ -99,9 +98,8 @@
     .ticket-img-wrapper {
       position: relative;
       overflow: hidden;
-      height: 200px;
+      min-height: 340px;
       width: 100%;
-      flex-shrink: 0;
       cursor: pointer;
     }
 
@@ -126,8 +124,9 @@
       background: linear-gradient(135deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.2) 100%);
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
+      justify-content: flex-end;
       align-items: center;
+      gap: 0.75rem;
       padding: 1rem;
       z-index: 2;
     }
@@ -145,10 +144,71 @@
       box-shadow: 0 10px 18px rgba(0, 0, 0, 0.15);
     }
 
+    .overlay-top {
+      width: 100%;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .overlay-center {
+      width: 100%;
+      padding: 0 1rem;
+      text-align: center;
+    }
+
+    .overlay-center h3 {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: 0.5px;
+    }
+
+    .overlay-center .description {
+      margin: 0.35rem 0 0;
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 0.85rem;
+      line-height: 1.35;
+    }
+
     .overlay-stats {
       display: flex;
       gap: 0.75rem;
       align-self: center;
+      margin-top: 0.5rem;
+    }
+
+    .center-stats {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      margin-top: 0.8rem;
+      flex-wrap: wrap;
+    }
+
+    .overlay-actions {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      margin-top: 1rem;
+    }
+
+    .overlay-actions .btn-buy {
+      flex: 1 1 220px;
+      max-width: 280px;
+    }
+
+    .bottom-share {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+      margin-top: 0.85rem;
+    }
+
+    .overlay-actions .social-share {
+      display: none;
     }
 
     .overlay-stat {
