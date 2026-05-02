@@ -37,7 +37,7 @@ Edit `public/scripts/event.js` to update:
 
 ```javascript
 // Event configuration (top of file)
-const TICKET_PRICE = 50;                    // Price per ticket in Naira
+const TICKET_PRICE = 5000;                    // Price per ticket in Naira
 const MAX_TICKETS_PER_CONTESTANT = 20;        // Tickets per contestant
 const TICKETS_PER_PURCHASE = 5;               // Max tickets per transaction
 const EVENT_DATE = new Date("2026-05-15T18:00:00+01:00"); // Event date/time
@@ -91,7 +91,7 @@ eventTickets/
 │   │   ├── name: "Buyer Name"
 │   │   ├── phone: "08012345678"
 │   │   ├── quantity: 1
-│   │   ├── amount: 50
+│   │   ├── amount: 5000
 │   │   ├── paymentRef: "ref_xxxxx"
 │   │   ├── timestamp: 1234567890
 │   │   └── status: "completed"
@@ -111,7 +111,7 @@ const EVENT_DATE = new Date("2026-05-15T18:00:00+01:00");
 ### Changing Ticket Price
 Edit in `event.js`:
 ```javascript
-const TICKET_PRICE = 50; // in Naira
+const TICKET_PRICE = 5000; // in Naira
 ```
 
 ### Changing Event Name/Description
