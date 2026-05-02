@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ticket Status Check - Kwara Talent Harvest</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="assets/favicon.png">
+  <link rel="stylesheet" href="styles/voting.css">
+  <style>
+    body {
+      background: #050816;
+      color: #e2e8f0;
+      min-height: 100vh;
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    .top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.5rem;
+      gap: 1rem;
+      background: rgba(15, 23, 42, 0.95);
+      border-bottom: 1px solid rgba(34, 197, 94, 0.18);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .logo {
+      width: 130px;
+      height: auto;
+    }
+
+    .back {
+      border: 1px solid #22c55e;
+      color: #22c55e;
+      background: transparent;
+      padding: 0.85rem 1rem;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .ticket-status-page {
+      max-width: 760px;
+      margin: 2rem auto 3rem;
+      padding: 0 1rem;
+    }
+
+    .status-card {
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid rgba(34, 197, 94, 0.16);
+      border-radius: 22px;
+      padding: 2rem;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.25);
+    }
+
+    .status-card h1 {
+      margin: 0 0 0.75rem;
+      font-size: 2rem;
+      color: #22c55e;
+    }
+
+    .status-card p {
+      line-height: 1.7;
+      color: #cbd5e1;
+    }
+
+    .status-card label {
+      display: block;
+      margin: 1.6rem 0 0.5rem;
+      font-weight: 700;
+      color: #94a3b8;
+    }
+
+    .status-card input {
+      width: 100%;
+      padding: 1rem;
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      background: rgba(15, 23, 42, 0.85);
+      color: #fff;
+      font-size: 1rem;
+    }
+
+    .status-card .btn {
+      margin-top: 1.4rem;
+      width: 100%;
+      padding: 1rem;
+      border-radius: 14px;
+      border: none;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #050816;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .message {
+      margin-top: 1rem;
+      padding: 1rem 1rem 0;
+      color: #e2e8f0;
+      font-weight: 600;
+    }
+
+    .ticket-details {
+      margin-top: 2rem;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid rgba(34, 197, 94, 0.12);
+      border-radius: 20px;
+      padding: 1.75rem;
+    }
+
+    .ticket-details h2 {
+      margin-top: 0;
+      color: #22c55e;
+    }
+
+    .ticket-details dl {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin: 1rem 0 0;
+    }
+
+    .ticket-details dt {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-bottom: 0.3rem;
+    }
+
+    .ticket-details dd {
+      margin: 0;
+      font-size: 1rem;
+      color: #e2e8f0;
+      font-weight: 700;
+    }
+
+    .ticket-actions {
+      margin-top: 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .ticket-actions .btn.secondary {
+      width: auto;
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      border: 1px solid #3b82f6;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 720px) {
+      .ticket-details dl {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <a href="index.html"><img src="assets/logo.png" class="logo" alt="KTH Logo"></a>
+    <button class="back" onclick="location.href='event.html'">Back to event</button>
+  </header>
+
+  <main class="ticket-status-page">
+    <section class="status-card">
+      <h1>Ticket Status Check</h1>
+      <p>Enter your ticket code or payment reference to confirm whether your ticket has been activated by the admin. Once approved, you can download your e-ticket right from this page.</p>
+
+      <label for="ticketSearch">Ticket Code or Payment Reference</label>
+      <input id="ticketSearch" type="text" placeholder="KTH-... or reference">
+
+      <button id="searchBtn" class="btn">Check Status</button>
+
+      <p id="statusMessage" class="message"></p>
+    </section>
+
+    <section id="ticketDetails" class="ticket-details hidden"></section>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script type="module" src="scripts/ticket-status.js"></script>
+</body>
+</html>
