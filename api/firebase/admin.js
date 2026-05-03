@@ -3,16 +3,23 @@ import admin from "firebase-admin";
 let db;
 
 try {
+  const projectId = process.env.FB_PROJECT_ID;
+  const clientEmail = process.env.FB_CLIENT_EMAIL;
+  const privateKey = process.env.FB_PRIVATE_KEY;
+  const databaseURL = process.env.FB_DB_URL;
 
   if (!admin.apps.length) {
+    if (!projectId || !clientEmail || !privateKey || !databaseURL) {
+      throw new Error("Firebase Admin environment variables are not fully configured");
+    }
 
     admin.initializeApp({
       credential: admin.credential.cert({
-        projectId: process.env.FB_PROJECT_ID,
-        clientEmail: process.env.FB_CLIENT_EMAIL,
-        privateKey: process.env.FB_PRIVATE_KEY.replace(/\\n/g, "\n"),
+        projectId,
+        clientEmail,
+        privateKey: privateKey.replace(/\\n/g, "\n"),
       }),
-      databaseURL: process.env.FB_DB_URL,
+      databaseURL,
     });
 
     console.log("✅ Firebase Admin initialized");

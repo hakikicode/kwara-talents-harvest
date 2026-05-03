@@ -5,6 +5,12 @@ import fs from "fs";
 import path from "path";
 import xlsx from "xlsx";
 import { fileURLToPath } from "url";
+import adminLoginHandler from "../api/admin-login.js";
+import approvePaymentHandler from "../api/approve-payment.js";
+import rejectPaymentHandler from "../api/reject-payment.js";
+import deleteContestantHandler from "../api/delete-contestant.js";
+import { db } from "../api/firebase/admin.js";
+import { requireAdmin } from "../api/_admin.js";
 
 // Required for ES Modules to get __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -80,34 +86,105 @@ app.post("/api/registrations", (req, res) => {
 });
 
 // Admin Login Endpoint
-app.post("/api/admin/login", (req, res) => {
-  const { username, password } = req.body;
+app.post("/api/admin/login", adminLoginHandler);
 
-  if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-    return res.status(200).json({ message: "Login successful!", token: "admin-token", username: ADMIN_USERNAME });
+app.post("/api/approve-payment", approvePaymentHandler);
+app.post("/api/reject-payment", rejectPaymentHandler);
+app.post("/api/delete-contestant", deleteContestantHandler);
+
+app.post("/api/admin-update-contestant", async (req, res) => {
+  if (!requireAdmin(req, res)) {
+    return;
   }
 
-  res.status(401).json({ error: "Invalid credentials." });
+  const { contestantId, updates } = req.body || {};
+
+  if (!contestantId || !updates || typeof updates !== "object") {
+    return res.status(400).json({ error: "Missing contestantId or updates" });
+  }
+
+  try {
+    const contestantRef = db.ref(`contestants/${contestantId}`);
+    const snap = await contestantRef.get();
+
+    if (!snap.exists()) {
+      return res.status(404).json({ error: "Contestant not found" });
+    }
+
+    await contestantRef.update(updates);
+    return res.json({ success: true, contestantId });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Failed to update contestant" });
+  }
+});
+
+app.post("/api/add-votes", async (req, res) => {
+  if (!requireAdmin(req, res)) {
+    return;
+  }
+
+  const { contestantId, votes } = req.body || {};
+  const voteCount = Number(votes || 0);
+
+  if (!contestantId || voteCount <= 0) {
+    return res.status(400).json({ error: "Missing contestantId or votes" });
+  }
+
+  try {
+    const votesRef = db.ref(`contestants/${contestantId}/votes`);
+    await votesRef.transaction(current => {
+      const currentVotes = Number(current || 0);
+      return currentVotes + voteCount;
+    });
+
+    return res.json({ success: true, contestantId, votes: voteCount });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Failed to add votes" });
+  }
+});
+
+app.post("/api/admin-add-votes", async (req, res) => {
+  if (!requireAdmin(req, res)) {
+    return;
+  }
+
+  const { contestantId, votes } = req.body || {};
+  const voteCount = Number(votes || 0);
+
+  if (!contestantId || voteCount <= 0) {
+    return res.status(400).json({ error: "Missing contestantId or votes" });
+  }
+
+  try {
+    const votesRef = db.ref(`contestants/${contestantId}/votes`);
+    await votesRef.transaction(current => {
+      const currentVotes = Number(current || 0);
+      return currentVotes + voteCount;
+    });
+
+    return res.json({ success: true, contestantId, votes: voteCount });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Failed to add votes" });
+  }
 });
 
 // Fetch Registrations (Admin Only)
 app.get("/api/admin/registrations", (req, res) => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || authHeader !== "Bearer admin-token") {
-    return res.status(403).json({ message: "Unauthorized." });
+  if (!requireAdmin(req, res)) {
+    return;
   }
 
-  const db = readDatabase();
-  res.status(200).json(db);
+  const registrationData = readDatabase();
+  res.status(200).json(registrationData);
 });
 
 // Export Registrations as CSV or Excel (Admin Only)
 app.get("/api/admin/registrations/export/:format", (req, res) => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || authHeader !== "Bearer admin-token") {
-    return res.status(403).json({ message: "Unauthorized." });
+  if (!requireAdmin(req, res)) {
+    return;
   }
 
   const { format } = req.params;

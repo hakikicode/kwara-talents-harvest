@@ -11,9 +11,21 @@ import {
 const VOTE_PRICE = 350;
 const AUTH_KEY = "kth_admin_token";
 const apiBaseMeta = document.querySelector('meta[name="api-base-url"]');
-const API_BASE_URL = (["127.0.0.1", "localhost"].includes(window.location.hostname)
-  ? "http://localhost:5000"
-  : apiBaseMeta?.content?.trim() || "");
+const API_BASE_URL = (() => {
+  if (["127.0.0.1", "localhost"].includes(window.location.hostname)) {
+    return "http://localhost:5000";
+  }
+
+  const value = apiBaseMeta?.content?.trim() || "";
+  if (!value) return "";
+
+  try {
+    const parsed = new URL(value, window.location.origin);
+    return parsed.origin === window.location.origin ? "" : parsed.origin;
+  } catch {
+    return value.replace(/\/$/, "");
+  }
+})();
 
 const loginBox = document.getElementById("loginBox");
 const dashboard = document.getElementById("dashboard");
@@ -142,7 +154,7 @@ function showLogin() {
 }
 
 async function loginRequest(username, password) {
-  const res = await fetch(buildApiUrl("/api/admin/login"), {
+  const res = await fetch(buildApiUrl("/api/admin-login"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username, password })
@@ -635,6 +647,7 @@ window.rejectPayment = async function rejectPayment(id) {
   try {
     await apiPost("/api/reject-payment", { id });
     setMessage("Manual payment rejected.");
+    renderManualPayments();
   } catch (err) {
     setMessage(err.message, true);
   }
