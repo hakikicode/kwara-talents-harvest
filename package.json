@@ -1,5 +1,22 @@
 {
+  "name": "kwara-talents-harvest",
+  "version": "1.0.0",
+  "description": "Kwara Talent Harvest Event Management System",
+  "main": "server/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node server/index.js",
+    "server": "node server/index.js"
+  },
   "dependencies": {
-    "firebase-admin": "^13.7.0"
+    "body-parser": "^1.20.5",
+    "cors": "^2.8.6",
+    "express": "^4.22.1",
+    "firebase-admin": "^13.7.0",
+    "xlsx": "^0.18.5"
+  },
+  "engines": {
+    "node": ">=16.0.0"
   }
 }

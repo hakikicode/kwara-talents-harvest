@@ -495,6 +495,25 @@ if (loginButton) {
   loginButton.addEventListener("click", window.login);
 }
 
+// Add Enter key support for login
+if (usernameInput) {
+  usernameInput.addEventListener("keypress", function(event) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      window.login();
+    }
+  });
+}
+
+if (passwordInput) {
+  passwordInput.addEventListener("keypress", function(event) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      window.login();
+    }
+  });
+}
+
 window.logout = function logout() {
   clearToken();
   showLogin();
