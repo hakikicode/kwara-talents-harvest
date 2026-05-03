@@ -1,6 +1,6 @@
 const TICKET_PRICE = 5000;
 const MAX_TICKETS_PER_CONTESTANT = 20;
-const EVENT_DATE = new Date("2026-05-15T18:00:00+01:00");
+const EVENT_DATE = new Date("2026-05-16T02:00:00+01:00");
 
 import { db } from "../firebase/setup.js";
 import {
