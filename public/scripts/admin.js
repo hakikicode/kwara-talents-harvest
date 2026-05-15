@@ -7,6 +7,8 @@ import {
   get,
   runTransaction
 } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
+import jsPDF from "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/+esm";
+import html2canvas from "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm";
 
 const VOTE_PRICE = 350;
 const AUTH_KEY = "kth_admin_token";
@@ -984,6 +986,142 @@ window.exportZeroVoteCSV = function exportZeroVoteCSV() {
   link.download = "kth-contestants-no-votes.csv";
   link.click();
   URL.revokeObjectURL(url);
+};
+
+window.generateContestantsPDF = async function generateContestantsPDF() {
+  try {
+    setMessage("Generating PDF report...", false);
+
+    if (Object.keys(contestantData).length === 0) {
+      setMessage("No contestant data available. Please load contestants first.", true);
+      return;
+    }
+
+    // Calculate total votes for percentage calculation
+    const totalVotes = Object.values(contestantData).reduce((sum, c) => sum + (c.votes || 0), 0);
+
+    // Sort contestants by votes (descending)
+    const sortedContestants = Object.entries(contestantData)
+      .sort(([, a], [, b]) => (b.votes || 0) - (a.votes || 0));
+
+    // Create PDF with A4 size
+    const pdf = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4"
+    });
+
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    let yPosition = 15;
+    const marginLeft = 15;
+    const marginRight = 15;
+    const contentWidth = pageWidth - marginLeft - marginRight;
+    const imgWidth = 40;
+    const imgHeight = 50;
+
+    // Add title
+    pdf.setFontSize(20);
+    pdf.setFont(undefined, "bold");
+    pdf.text("Kwara Talent Harvest - Contestants Report", marginLeft, yPosition);
+    yPosition += 10;
+
+    // Add date
+    pdf.setFontSize(10);
+    pdf.setFont(undefined, "normal");
+    pdf.text(`Generated: ${new Date().toLocaleString()}`, marginLeft, yPosition);
+    yPosition += 8;
+
+    // Add summary
+    pdf.setFontSize(11);
+    pdf.setFont(undefined, "bold");
+    pdf.text(`Total Contestants: ${sortedContestants.length} | Total Votes: ${totalVotes}`, marginLeft, yPosition);
+    yPosition += 10;
+
+    // Add separator line
+    pdf.setDrawColor(100);
+    pdf.line(marginLeft, yPosition, pageWidth - marginRight, yPosition);
+    yPosition += 8;
+
+    // Add contestants
+    for (let i = 0; i < sortedContestants.length; i++) {
+      const [id, contestant] = sortedContestants[i];
+      const votes = contestant.votes || 0;
+      const votingPercentage = totalVotes > 0 ? ((votes / totalVotes) * 100).toFixed(2) : 0;
+
+      // Check if we need a new page
+      if (yPosition + 65 > pageHeight - 10) {
+        pdf.addPage();
+        yPosition = 15;
+      }
+
+      // Contestant card background
+      pdf.setFillColor(240, 240, 240);
+      pdf.rect(marginLeft, yPosition, contentWidth, 60, "F");
+      pdf.setDrawColor(180);
+      pdf.rect(marginLeft, yPosition, contentWidth, 60);
+
+      let currentX = marginLeft + 5;
+      let currentY = yPosition + 5;
+
+      // Add image if available
+      if (contestant.picture) {
+        try {
+          pdf.addImage(contestant.picture, "JPEG", currentX, currentY, imgWidth, imgHeight);
+        } catch (err) {
+          // Image failed to load, just skip it
+          pdf.setFillColor(200, 200, 200);
+          pdf.rect(currentX, currentY, imgWidth, imgHeight, "F");
+          pdf.setFontSize(8);
+          pdf.text("No Image", currentX + imgWidth / 2, currentY + imgHeight / 2, { align: "center" });
+        }
+      } else {
+        // Placeholder for missing image
+        pdf.setFillColor(200, 200, 200);
+        pdf.rect(currentX, currentY, imgWidth, imgHeight, "F");
+        pdf.setFontSize(8);
+        pdf.text("No Image", currentX + imgWidth / 2, currentY + imgHeight / 2, { align: "center" });
+      }
+
+      currentX += imgWidth + 8;
+      const textWidth = contentWidth - imgWidth - 18;
+
+      // Add contestant info
+      pdf.setFontSize(12);
+      pdf.setFont(undefined, "bold");
+      pdf.text(`${contestant.stage_name || "N/A"}`, currentX, currentY, { maxWidth: textWidth });
+
+      currentY += 8;
+      pdf.setFontSize(10);
+      pdf.setFont(undefined, "normal");
+      pdf.text(`Full Name: ${contestant.full_name || "N/A"}`, currentX, currentY, { maxWidth: textWidth });
+
+      currentY += 7;
+      pdf.text(`ID: ${id}`, currentX, currentY, { maxWidth: textWidth });
+
+      currentY += 7;
+      pdf.setFont(undefined, "bold");
+      pdf.setTextColor(25, 118, 210); // Blue color for votes
+      pdf.text(`Votes: ${votes} (${votingPercentage}%)`, currentX, currentY, { maxWidth: textWidth });
+      pdf.setTextColor(0, 0, 0); // Reset to black
+      pdf.setFont(undefined, "normal");
+
+      currentY += 7;
+      const status = contestant.status === "approved" ? "✓ Approved" : "⊘ Pending";
+      pdf.text(`Status: ${status}`, currentX, currentY, { maxWidth: textWidth });
+
+      yPosition += 65;
+    }
+
+    // Save the PDF
+    const timestamp = new Date().toISOString().split("T")[0];
+    pdf.save(`kth-contestants-report-${timestamp}.pdf`);
+
+    setMessage("✅ PDF report generated and downloaded successfully!");
+  } catch (err) {
+    console.error("PDF generation error:", err);
+    setMessage(`PDF generation failed: ${err.message}`, true);
+  }
 };
 
 window.deleteContestant = async function deleteContestant(id) {
